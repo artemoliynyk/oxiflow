@@ -47,10 +47,18 @@ impl HttpWorker {
                 code: res.status().as_u16(),
                 response_time: elapsed,
             }),
-            Err(err) => Err(WorkerError {
-                error: err.to_string(),
-                timeout: Some(elapsed),
-            }),
+            Err(err) => {
+                let timeout_info = match err.is_timeout() {
+                    true => Some(elapsed),
+                    false => None,
+                };
+
+                Err(WorkerError {
+                    error: err.to_string(),
+                    is_timeout: err.is_timeout(),
+                    timeout: timeout_info,
+                })
+            }
         }
     }
 }

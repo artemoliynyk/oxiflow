@@ -16,6 +16,7 @@ pub struct WorkerResponse {
 #[derive(Debug, Default)]
 pub struct WorkerError {
     error: String,
+    is_timeout: bool,
 
     /// if error happened due to the timeout – this field will hold the time (ms)
     timeout: Option<u128>,
@@ -25,9 +26,14 @@ impl std::fmt::Display for WorkerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Error: {}, Timeout(ms) - {}",
+            "Error: {}, Timeout - {}{}",
             self.error,
-            self.timeout.unwrap_or_default(),
+            self.is_timeout,
+            if self.is_timeout {
+                format!(", {} (ms)", self.timeout.unwrap())
+            } else {
+                "".to_string()
+            }
         )
     }
 }
