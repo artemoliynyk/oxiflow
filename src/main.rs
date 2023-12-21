@@ -1,6 +1,5 @@
 use clap::Parser;
-use oxiflow::worker::http_worker::HttpWorker;
-use std::time::Instant;
+use oxiflow::worker::{http_worker::HttpWorker, WorkerResult};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -8,9 +7,13 @@ struct Args {
     /// address to call
     address: String,
 
+    /// how many request to send concurrently
+    #[arg(short, long, default_value_t = 1)]
+    concurrent: u16,
+
     /// how many times to repeat
     #[arg(short, long, default_value_t = 1)]
-    count: u8,
+    repeat: u16,
 }
 
 #[tokio::main]
@@ -19,43 +22,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Calling target '{}' and repeat: {}",
-        &args.address, &args.count
+        &args.address, &args.concurrent
     );
 
-    let mut handles: tokio::task::JoinSet<u128> = tokio::task::JoinSet::new();
+    let mut handles: tokio::task::JoinSet<WorkerResult> = tokio::task::JoinSet::new();
 
-    for c in 0..args.count {
-        println!("Call #{}", c);
+    for iteration in 0..args.repeat {
+        if args.repeat > 1 {
+            println!("Pass #{}", iteration + 1);
+        }
 
-        let address = args.address.clone();
+        for _ in 0..args.concurrent {
+            let worker = HttpWorker::new(2);
+            let req = worker.get(args.address.clone());
 
-        handles.spawn(async move {
-            let start = Instant::now();
+            let future = worker.execute(req);
+            handles.spawn(future);
+        }
 
-            let worker = HttpWorker::new(5);
-
-            let resp = worker.get(address).await;
-
-            match resp {
-                Ok(success) => {
-                    println!("{:#?}", success.status());
-                    start.elapsed().as_millis()
+        while let Some(res) = handles.join_next().await {
+            match res.unwrap() {
+                Ok(ok) => {
+                    println!("Response: {}", ok)
                 }
-                Err(failure) => {
-                    println!(
-                        "Error requesting: {}, timeout: {}",
-                        failure,
-                        failure.is_timeout()
-                    );
-
-                    0
-                }
+                Err(err) => println!("Failed: {}", err),
             }
-        });
-    }
-
-    while let Some(res) = handles.join_next().await {
-        println!("Response time: {} ms", res.unwrap())
+        }
     }
 
     Ok(())

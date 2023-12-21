@@ -10,7 +10,7 @@ pub struct WorkerResponse {
     pub code: u16,
 
     /// response time from the server in ms
-    pub response_time: u32,
+    pub response_time: u128,
 }
 
 #[derive(Debug, Default)]
@@ -18,17 +18,28 @@ pub struct WorkerError {
     error: String,
 
     /// if error happened due to the timeout – this field will hold the time (ms)
-    timeout: Option<u32>,
+    timeout: Option<u128>,
 }
 
 impl std::fmt::Display for WorkerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Timeout(ms): {}\nError: {}",
-            self.timeout.unwrap_or_default(), self.error
+            "Error: {}, Timeout(ms) - {}",
+            self.error,
+            self.timeout.unwrap_or_default(),
         )
     }
 }
 
-type WorkerResult = std::result::Result<WorkerResponse, WorkerError>;
+impl std::fmt::Display for WorkerResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Seccess: Status – {}, Response time (ms) - {}",
+            self.code, self.response_time
+        )
+    }
+}
+
+pub type WorkerResult = std::result::Result<WorkerResponse, WorkerError>;

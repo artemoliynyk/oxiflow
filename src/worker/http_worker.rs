@@ -1,6 +1,8 @@
-use std::{future::Future, time::Duration};
+use std::time::{Duration, Instant};
 
-use reqwest::{Client, ClientBuilder, Response};
+use reqwest::{Client, ClientBuilder, RequestBuilder};
+
+use super::{WorkerError, WorkerResponse, WorkerResult};
 
 /// HTTP specific worker, used to call HTTP/HTTPS urls
 pub struct HttpWorker {
@@ -19,19 +21,36 @@ impl HttpWorker {
         }
     }
 
-    pub fn get(self, url: String) -> impl Future<Output = Result<Response, reqwest::Error>>{
-        self.client.get(url).send()
+    pub fn get(&self, url: String) -> RequestBuilder {
+        self.client.get(url)
     }
 
-    pub fn post(self, url: String) -> impl Future<Output = Result<Response, reqwest::Error>>{
-        self.client.post(url).send()
+    pub fn post(&self, url: String) -> RequestBuilder {
+        self.client.post(url)
     }
 
-    pub fn put(self, url: String) -> impl Future<Output = Result<Response, reqwest::Error>>{
-        self.client.put(url).send()
+    pub fn put(&self, url: String) -> RequestBuilder {
+        self.client.put(url)
     }
 
-    pub fn delete(self, url: String) -> impl Future<Output = Result<Response, reqwest::Error>>{
-        self.client.delete(url).send()
+    pub fn delete(&self, url: String) -> RequestBuilder {
+        self.client.delete(url)
+    }
+
+    pub async fn execute(self, request: RequestBuilder) -> WorkerResult {
+        let start = Instant::now();
+        let response = request.send().await;
+        let elapsed = start.elapsed().as_millis();
+
+        match response {
+            Ok(res) => Ok(WorkerResponse {
+                code: res.status().as_u16(),
+                response_time: elapsed,
+            }),
+            Err(err) => Err(WorkerError {
+                error: err.to_string(),
+                timeout: Some(elapsed),
+            }),
+        }
     }
 }
