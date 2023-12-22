@@ -1,8 +1,8 @@
-pub mod http_worker;
+use std::time::Instant;
 
-pub enum WorkerType {
-    Http,
-}
+use reqwest::RequestBuilder;
+
+pub mod http_worker;
 
 #[derive(Default)]
 pub struct WorkerResponse {
@@ -49,3 +49,28 @@ impl std::fmt::Display for WorkerResponse {
 }
 
 pub type WorkerResult = std::result::Result<WorkerResponse, WorkerError>;
+
+pub async fn execute_request(request: RequestBuilder) -> WorkerResult {
+    let start = Instant::now();
+    let response = request.send().await;
+    let elapsed = start.elapsed().as_millis();
+
+    match response {
+        Ok(res) => Ok(WorkerResponse {
+            code: res.status().as_u16(),
+            response_time: elapsed,
+        }),
+        Err(err) => {
+            let timeout_info = match err.is_timeout() {
+                true => Some(elapsed),
+                false => None,
+            };
+
+            Err(WorkerError {
+                error: err.to_string(),
+                is_timeout: err.is_timeout(),
+                timeout: timeout_info,
+            })
+        }
+    }
+}
