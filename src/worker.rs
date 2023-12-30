@@ -9,8 +9,8 @@ pub async fn perform_requests(
     timeout: u8,
     concurrent: u8,
     repeat: u8,
-) -> WorkerResult {
-    let mut result = WorkerResult::new();
+) -> Box<WorkerResult> {
+    let mut result = Box::new(WorkerResult::new());
 
     let mut handles: tokio::task::JoinSet<client::ClientResult> = tokio::task::JoinSet::new();
 

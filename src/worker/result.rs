@@ -31,12 +31,12 @@ pub struct WorkerResult {
     // pub average_response: u128,
     pub total_responces: ResponseCountAverage,
     pub total_errors: u32,
-    pub total_by_code: Box<[ResponseCountAverage; 6]>,
+    pub total_by_code: [ResponseCountAverage; 6],
 }
 
 impl Default for WorkerResult {
     fn default() -> Self {
-        let codes = Box::new([ResponseCountAverage::default(); 6]);
+        let codes = [ResponseCountAverage::default(); 6];
 
         WorkerResult {
             total_responces: ResponseCountAverage::default(),
