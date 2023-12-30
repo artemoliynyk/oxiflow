@@ -1,18 +1,21 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use reqwest::{Client, RequestBuilder, ClientBuilder};
+use reqwest::{Client, ClientBuilder, RequestBuilder};
 
+use super::{response::ClientResponse, error::ClientError};
+
+pub type ClientResult = std::result::Result<ClientResponse, ClientError>;
 
 /// HTTP specific worker, used to call HTTP/HTTPS urls
-pub struct HttpWorker {
+pub struct HttpClient {
     client: Client,
 }
 
-impl HttpWorker {
-    pub fn new(timeout_sec: u8) -> HttpWorker {
+impl HttpClient {
+    pub fn new(timeout_sec: u8) -> HttpClient {
         let default_timeout = Duration::from_secs(timeout_sec as u64);
 
-        HttpWorker {
+        HttpClient {
             client: ClientBuilder::new()
                 .timeout(default_timeout)
                 .build()
@@ -34,5 +37,17 @@ impl HttpWorker {
 
     pub fn delete(&self, url: String) -> RequestBuilder {
         self.client.delete(url)
+    }
+}
+
+
+pub async fn execute_request(request: RequestBuilder) -> ClientResult {
+    let start = Instant::now();
+    let response = request.send().await;
+    let elapsed = start.elapsed().as_millis();
+
+    match response {
+        Ok(res) => Ok(ClientResponse::new(res, elapsed)),
+        Err(err) => Err(ClientError::new(err, elapsed)),
     }
 }

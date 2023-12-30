@@ -1,76 +1,45 @@
-use std::time::Instant;
+pub mod result;
 
-use reqwest::RequestBuilder;
+use crate::http::client;
 
-pub mod http_worker;
+use self::result::WorkerResult;
 
-#[derive(Default)]
-pub struct WorkerResponse {
-    /// HTTP response code
-    pub code: u16,
+pub async fn perform_requests(
+    address: String,
+    timeout: u8,
+    concurrent: u16,
+    repeat: u16,
+) -> WorkerResult {
+    let mut result = WorkerResult::new();
 
-    /// response time from the server in ms
-    pub response_time: u128,
-}
+    let mut handles: tokio::task::JoinSet<client::ClientResult> = tokio::task::JoinSet::new();
 
-#[derive(Debug, Default)]
-pub struct WorkerError {
-    error: String,
-    is_timeout: bool,
-
-    /// if error happened due to the timeout – this field will hold the time (ms)
-    timeout: Option<u128>,
-}
-
-impl std::fmt::Display for WorkerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Error: {}, Timeout - {}{}",
-            self.error,
-            self.is_timeout,
-            if self.is_timeout {
-                format!(", {} (ms)", self.timeout.unwrap())
-            } else {
-                "".to_string()
-            }
-        )
-    }
-}
-
-impl std::fmt::Display for WorkerResponse {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Seccess: Status – {}, Response time (ms) - {}",
-            self.code, self.response_time
-        )
-    }
-}
-
-pub type WorkerResult = std::result::Result<WorkerResponse, WorkerError>;
-
-pub async fn execute_request(request: RequestBuilder) -> WorkerResult {
-    let start = Instant::now();
-    let response = request.send().await;
-    let elapsed = start.elapsed().as_millis();
-
-    match response {
-        Ok(res) => Ok(WorkerResponse {
-            code: res.status().as_u16(),
-            response_time: elapsed,
-        }),
-        Err(err) => {
-            let timeout_info = match err.is_timeout() {
-                true => Some(elapsed),
-                false => None,
-            };
-
-            Err(WorkerError {
-                error: err.to_string(),
-                is_timeout: err.is_timeout(),
-                timeout: timeout_info,
-            })
+    let worker = client::HttpClient::new(timeout);
+    for iteration in 0..repeat {
+        if repeat > 1 {
+            println!("Pass #{}", iteration + 1);
         }
+
+        for _ in 0..concurrent {
+            let req = worker.get(address.clone());
+            let future = client::execute_request(req);
+            handles.spawn(future);
+        }
+
+        while let Some(res) = handles.join_next().await {
+            match res.unwrap() {
+                Ok(ok) => {
+                    result.count_success(ok.response_time);
+                    println!("Response: {}", ok);
+                }
+                Err(err) => {
+                    result.count_failure();
+                    println!("Failed: {}", err)
+                }
+            }
+        }
+        println!(" ");
     }
+
+    result
 }

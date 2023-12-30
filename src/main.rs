@@ -1,8 +1,9 @@
 use clap::Parser;
-use oxiflow::worker::{execute_request, http_worker::HttpWorker, WorkerResult};
+use oxiflow::worker;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
+/// Simple, fast, concurrent load tester with minimal reporting
 struct Args {
     /// address to call
     address: String,
@@ -15,7 +16,7 @@ struct Args {
     #[arg(short, long, default_value_t = 1)]
     repeat: u16,
 
-    /// request timeour, seconds
+    /// request timeout in seconds
     #[arg(short, long, default_value_t = 2)]
     timeout: u8,
 }
@@ -29,30 +30,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &args.address, &args.concurrent, &args.repeat, &args.timeout
     );
 
-    let mut handles: tokio::task::JoinSet<WorkerResult> = tokio::task::JoinSet::new();
+    let result =
+        worker::perform_requests(args.address, args.timeout, args.concurrent, args.repeat).await;
 
-    let worker = HttpWorker::new(args.timeout);
-    for iteration in 0..args.repeat {
-        if args.repeat > 1 {
-            println!("Pass #{}", iteration + 1);
-        }
-
-        for _ in 0..args.concurrent {
-            let req = worker.get(args.address.clone());
-            let future = execute_request(req);
-            handles.spawn(future);
-        }
-
-        while let Some(res) = handles.join_next().await {
-            match res.unwrap() {
-                Ok(ok) => {
-                    println!("Response: {}", ok)
-                }
-                Err(err) => println!("Failed: {}", err),
-            }
-        }
-        println!(" ");
-    }
+    println!("Successes: {}", result.successes);
+    println!("Failures: {}", result.failures);
+    println!("Average response time (ms): {}", result.average_response);
 
     Ok(())
 }
