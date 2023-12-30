@@ -7,8 +7,8 @@ use self::result::WorkerResult;
 pub async fn perform_requests(
     address: String,
     timeout: u8,
-    concurrent: u16,
-    repeat: u16,
+    concurrent: u8,
+    repeat: u8,
 ) -> WorkerResult {
     let mut result = WorkerResult::new();
 
@@ -28,13 +28,13 @@ pub async fn perform_requests(
 
         while let Some(res) = handles.join_next().await {
             match res.unwrap() {
-                Ok(ok) => {
-                    result.count_success(ok.response_time);
-                    println!("Response: {}", ok);
+                Ok(client_response) => {
+                    result.count_response(&client_response);
+                    println!("Response: {}", client_response);
                 }
-                Err(err) => {
-                    result.count_failure();
-                    println!("Failed: {}", err)
+                Err(client_error) => {
+                    result.count_error();
+                    println!("Failed: {}", client_error)
                 }
             }
         }

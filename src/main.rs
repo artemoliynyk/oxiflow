@@ -10,11 +10,11 @@ struct Args {
 
     /// how many request to send concurrently
     #[arg(short, long, default_value_t = 1)]
-    concurrent: u16,
+    concurrent: u8,
 
     /// how many times to repeat
     #[arg(short, long, default_value_t = 1)]
-    repeat: u16,
+    repeat: u8,
 
     /// request timeout in seconds
     #[arg(short, long, default_value_t = 2)]
@@ -33,9 +33,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result =
         worker::perform_requests(args.address, args.timeout, args.concurrent, args.repeat).await;
 
-    println!("Successes: {}", result.successes);
-    println!("Failures: {}", result.failures);
-    println!("Average response time (ms): {}", result.average_response);
+    println!("{} Results {}", "=".repeat(13), "=".repeat(13));
+    println!("Successes: {}", result.total_responces.count);
+    println!("Failures: {}", result.total_errors);
+    println!(
+        "Average response time: {} ms",
+        result.total_responces.average_ms
+    );
+    println!(" ");
+    println!("{} Stats by code {}", "=".repeat(10), "=".repeat(10));
+    println!("Code\t\tResponses\tAverage time (ms)");
+    for i in 1..5 {
+        let code_data = result.total_by_code[i as usize];
+        println!("HTTP {}xx\t{}\t\t{}", i, code_data.count, code_data.average_ms);
+    }
+    println!("{}", "=".repeat(35));
 
     Ok(())
 }
