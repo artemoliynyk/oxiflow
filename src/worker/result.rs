@@ -2,13 +2,8 @@ use crate::http::response::ClientResponse;
 
 /// Struct to count response number and average response time (ms) by code.
 ///
-/// ```
-/// // store 2 responses and 120 ms as an average
-/// ResponseCountAverage {
-///     count: 2,
-///     average: 120,
-/// };
-/// ```
+/// For example: store 2 responses and 120 ms as an average: 
+/// `ResponseCountAverage { count: 2, average: 120 };`
 #[derive(Default, Clone, Copy)]
 pub struct ResponseCountAverage {
     pub count: u32,
