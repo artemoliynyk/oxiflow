@@ -1,4 +1,5 @@
 use clap::Parser;
+use env_logger::Builder as log_builder;
 use oxiflow::worker;
 
 #[derive(Parser, Debug)]
@@ -19,11 +20,28 @@ struct Args {
     /// request timeout in seconds
     #[arg(short, long, default_value_t = 2)]
     timeout: u8,
+
+    /// print extra non-debug information
+    #[arg(short, long)]
+    verbose: bool,
+
+    /// print debug information.
+    /// if used with --verbose – enable a "trace mode", with a lot of extra info
+    #[arg(short, long)]
+    debug: bool,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+
+    let log_level: log::LevelFilter = match (args.verbose, args.debug) {
+        (true, true) => log::LevelFilter::Trace,
+        (false, true) => log::LevelFilter::Debug,
+        (true, false) => log::LevelFilter::Info,
+        (false, false) => log::LevelFilter::Warn,
+    };
+    log_builder::new().filter_level(log_level).init();
 
     println!(
         "Calling target '{}', concurren clients: {}, repeat: {}, timeout {} sec.",
@@ -45,7 +63,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Code\t\tResponses\tAverage time (ms)");
     for i in 1..5 {
         let code_data = result.total_by_code[i as usize];
-        println!("HTTP {}xx\t{}\t\t{}", i, code_data.count, code_data.average_ms);
+        println!(
+            "HTTP {}xx\t{}\t\t{}",
+            i, code_data.count, code_data.average_ms
+        );
     }
     println!("{}", "=".repeat(35));
 
