@@ -29,7 +29,7 @@ pub async fn perform_requests(
             let future = client::execute_request(req);
             handles.spawn(future);
 
-            progress_bar.print_update_progress((iteration * worker_no) as u32)
+            progress_bar.print_update_progress((iteration + 1) as u32 * (worker_no + 1) as u32)
         }
 
         while let Some(res) = handles.join_next().await {
