@@ -3,7 +3,7 @@ pub mod result;
 use self::result::WorkerResult;
 use crate::{
     http::client,
-    progress::{self, Oxibar},
+    progress::Oxibar,
 };
 use log;
 
