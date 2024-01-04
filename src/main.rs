@@ -61,8 +61,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(" ");
     println!("{} Stats by code {}", "=".repeat(10), "=".repeat(10));
     println!("Code\t\tResponses\tAverage time (ms)");
-    for i in 1..5 {
-        let code_data = result.total_by_code[i as usize];
+
+    for i in 1u8..6u8 {
+        let code_data = result.total_by_code.get(i as usize).unwrap();
         println!(
             "HTTP {}xx\t{}\t\t{}",
             i, code_data.count, code_data.average_ms

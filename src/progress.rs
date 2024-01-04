@@ -6,6 +6,9 @@ pub struct Oxibar {
     /// how many items do we have
     total: u32,
 
+    /// current progress (current item)
+    current: u32,
+
     /// progress bar width in chars
     size: u32,
 
@@ -29,6 +32,7 @@ impl Default for Oxibar {
     fn default() -> Self {
         Self {
             total: 0,
+            current: 0,
             size: _DEFAULT_WIDTH,
             style_empty: "-".to_string(),
             style_filled: "=".to_string(),
@@ -104,16 +108,22 @@ impl Oxibar {
         let _total = total as f32;
         let _current = current as f32;
 
-        let multiplier = 100 / self.size;
+        let multiplier = 100.0 / self.size as f32;
         let rate: f32 = self.size as f32 / _total;
         let rel_curr = rate * current as f32;
-        let percent = rel_curr * multiplier as f32;
+        let percent = rel_curr * multiplier;
 
-        (self.size, rel_curr.floor() as u32, percent.round() as u32)
+        (self.size, rel_curr.floor() as u32, percent.ceil() as u32)
     }
 
-    pub fn print_update_progress(&self, current: u32) {
-        let (p_total, p_curr, percent) = self.calculate_values(self.total, current);
+    pub fn advance(&mut self) -> &Self {
+        self.current += 1;
+
+        self
+    }
+
+    pub fn print(&self) {
+        let (p_total, p_curr, percent) = self.calculate_values(self.total, self.current);
         let left = p_total - p_curr;
 
         let cursor = match p_curr < p_total {
@@ -129,7 +139,7 @@ impl Oxibar {
         let c_remain = &self.style_empty.repeat(left as usize);
 
         let progress = format!("[{}{}{}] {}/100%", c_done, cursor, c_remain, percent);
-        print!("\r{} ({}/{})", progress, current, self.total);
+        print!("\r{} ({}/{})", progress, self.current, self.total);
         std::io::stdout().flush().unwrap();
 
         if p_total == p_curr {
@@ -156,9 +166,10 @@ mod tests {
         assert_eq!(progress_bar.calculate_values(5, 5), (WIDTH, 10, 100));
 
         assert_eq!(progress_bar.calculate_values(10, 4), (WIDTH, 4, 40));
+        assert_eq!(progress_bar.calculate_values(10, 9), (WIDTH, 9, 90));
         assert_eq!(progress_bar.calculate_values(10, 10), (WIDTH, 10, 100));
 
-        assert_eq!(progress_bar.calculate_values(45, 10), (WIDTH, 2, 22));
+        assert_eq!(progress_bar.calculate_values(45, 10), (WIDTH, 2, 23));
         assert_eq!(progress_bar.calculate_values(45, 12), (WIDTH, 2, 27));
 
         assert_eq!(progress_bar.calculate_values(546, 180), (WIDTH, 3, 33));
@@ -167,11 +178,11 @@ mod tests {
     #[test]
     fn print_some_progress() {
         let total = 10;
-        let progress_bar = Oxibar::new(total);
+        let mut progress_bar = Oxibar::new(total);
 
-        for i in 0..total {
-            progress_bar.print_update_progress(i + 1);
-            thread::sleep(Duration::from_millis(500));
+        for _ in 0..total {
+            progress_bar.advance().print();
+            thread::sleep(Duration::from_millis(100));
         }
     }
 
@@ -179,6 +190,7 @@ mod tests {
     fn print_some_styled() {
         let total = 10;
         let mut progress_bar = Oxibar::new(total);
+
         progress_bar
             .set_size(30)
             .set_style_empty("~")
@@ -186,8 +198,10 @@ mod tests {
             .set_style_filled("#");
 
         for i in 0..total {
-            progress_bar.print_update_progress(i + 1);
-            thread::sleep(Duration::from_millis(500));
+            progress_bar.advance().print();
+            assert_eq!(progress_bar.current, i + 1);
+
+            thread::sleep(Duration::from_millis(100));
         }
     }
 }

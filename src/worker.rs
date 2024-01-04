@@ -1,10 +1,7 @@
 pub mod result;
 
 use self::result::WorkerResult;
-use crate::{
-    http::client,
-    progress::Oxibar,
-};
+use crate::{http::client, progress::Oxibar};
 use log;
 
 pub async fn perform_requests(
@@ -16,7 +13,7 @@ pub async fn perform_requests(
     let mut result = Box::new(WorkerResult::new());
     let mut handles: tokio::task::JoinSet<client::ClientResult> = tokio::task::JoinSet::new();
 
-    let progress_bar = Oxibar::new(repeat as u32 * concurrent as u32);
+    let mut progress_bar = Oxibar::new(repeat as u32 * concurrent as u32);
 
     let worker = client::HttpClient::new(timeout);
     for iteration in 0..repeat {
@@ -24,15 +21,15 @@ pub async fn perform_requests(
             log::info!(target: "worker::request", "Pass #{}", iteration + 1);
         }
 
-        for worker_no in 0..concurrent {
+        for _ in 0..concurrent {
             let req = worker.get(address.clone());
             let future = client::execute_request(req);
             handles.spawn(future);
-
-            progress_bar.print_update_progress((iteration + 1) as u32 * (worker_no + 1) as u32)
         }
 
         while let Some(res) = handles.join_next().await {
+            progress_bar.advance().print();
+
             match res.unwrap() {
                 Ok(client_response) => {
                     result.count_response(&client_response);
@@ -44,7 +41,6 @@ pub async fn perform_requests(
                 }
             }
         }
-        println!(" ");
     }
 
     result

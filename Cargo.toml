@@ -2,6 +2,9 @@
 name = "oxiflow"
 version = "0.1.3"
 edition = "2021"
+description = "Minimal HTTP loadtester with concurrency"
+license = "GPL-3.0"
+repository = "https://github.com/artemoliynyk/oxiflow/"
 
 [dependencies]
 clap = { version = "4.4.8", features = ["derive"] }
