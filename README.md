@@ -23,3 +23,32 @@ _At any time – refer to the help for currently available options._
 - `-c, --concurrent <CONCURRENT>` - define many request to send in parallel (might be systems dependent)
 - `-r, --repeat <REPEAT>` - how many times to repeat defined batch of concurrent requestss
 - `-t, --timeout <TIMEOUT>` - response timeout in seconds, if server won't respond in required interval – connection will be terminated and requests will be considered as failed
+
+
+# Roadmap
+This is pure pet fun project, but we all need some sort of plan, right?
+
+Planned features:
+- [x] Base functionality (concurrent calls, repeats, timeout, per-code report)
+- [x] Progress and verbosity
+- [ ] Delay between repeats
+- [ ] Reporting component
+  - [ ] Toggleable coloured output
+  - [ ] Per-URL requests report
+  - [ ] Report export (CSV, XML)
+  - [ ] Visual reporting (plotting)
+- [ ] HTTP Methods support:
+  - [x] GET
+  - [ ] POST
+  - [ ] DELETE
+  - [ ] PUT
+  - [ ] PATCH
+- [ ] Additional HTTP fields support:
+  - [ ] Support passing headers
+  - [ ] Support passing cookies
+- [ ] Authentication support:
+  - [ ] Obtain and reuse Bearer Token
+  - [ ] Keep cookies between requests during the session
+- [ ] Testing scenarios:
+  - [ ] URLs file (with methods)
+  - [ ] Pre-test actions (Auth)
