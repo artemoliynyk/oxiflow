@@ -19,7 +19,9 @@ jobs:
     - name: Rust 1.75.0
       run: |
         rm -f /home/runner/.cargo/bin/*
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+        chmod +x rustup.sh
+        ./rustup.sh -y
         rustup install 1.75.0
         which rustc
         rustc -V
