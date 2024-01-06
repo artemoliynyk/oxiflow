@@ -19,12 +19,12 @@ jobs:
     - name: Rust 1.75.0
       run: |
         ls -l /home/runner/.cargo/bin/
-        rustup update 1.75.0
+        rustup -v update 1.75.0
         which rustc
         rustc -V
         apt-cache search rust~i
-        apt-cache policy rustc~i
-        apt-get install rustc
+        sudo apt-cache policy rustc~i
+        sudo apt-get install rustc
       
     - name: Build
       run: cargo build --verbose
