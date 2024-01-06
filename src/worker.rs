@@ -1,5 +1,7 @@
 pub mod result;
 
+use std::{thread, time::Duration};
+
 use self::result::WorkerResult;
 use crate::{http::client, progress::Oxibar};
 use log;
@@ -9,6 +11,7 @@ pub async fn perform_requests(
     timeout: u8,
     concurrent: u8,
     repeat: u8,
+    delay: u8,
 ) -> Box<WorkerResult> {
     let mut result = Box::new(WorkerResult::new());
     let mut handles: tokio::task::JoinSet<client::ClientResult> = tokio::task::JoinSet::new();
@@ -42,6 +45,12 @@ pub async fn perform_requests(
                     log::info!(target: "worker::request", "Failed: {}", client_error);
                 }
             }
+        }
+
+        if repeat > 0 && delay > 0 {
+            log::info!("Waiting before repeating requests' batch {}s", delay);
+
+            thread::sleep(Duration::from_secs(delay as u64));
         }
     }
 
