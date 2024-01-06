@@ -5,6 +5,7 @@ edition = "2021"
 description = "Minimal HTTP loadtester with concurrency"
 license = "GPL-3.0"
 repository = "https://github.com/artemoliynyk/oxiflow/"
+rust-version = "1.75.0"
 
 [dependencies]
 clap = { version = "4.4.8", features = ["derive"] }
@@ -12,3 +13,57 @@ tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.11", features = ["json"] }
 log = "0.4.20"
 env_logger = "0.10.1"
+
+[lints.rust]
+keyword_idents = "warn"
+non_ascii_idents = "warn"
+noop_method_call = "warn"
+future_incompatible = "warn"
+
+[lints.clippy]
+char_lit_as_u8 = "warn" # restriction
+checked_conversions = "warn" # pedantic
+cognitive_complexity = "warn" # nursery
+dbg_macro = "warn" # restriction
+debug_assert_with_mut_call = "warn" # nursery
+doc_link_with_quotes = "warn" # pedantic
+empty_enum = "warn" # pedantic
+empty_line_after_outer_attr = "warn" # nursery
+empty_structs_with_brackets = "warn" # restriction
+enum_glob_use = "warn" # pedantic
+exit = "warn" # restriction
+float_cmp = "warn" # pedantic
+float_cmp_const = "warn" # restriction
+float_equality_without_abs = "warn" # suspicious
+inefficient_to_string = "warn" # pedantic
+lossy_float_literal = "warn" # restriction
+mem_forget = "warn" # restriction
+missing_const_for_fn = "warn" # nursery
+mod_module_files = "warn" # restriction
+mut_mut = "warn" # pedantic
+mutex_integer = "warn" # nursery
+needless_continue = "warn" # pedantic
+needless_for_each = "warn" # pedantic
+option_if_let_else = "warn" # nursery
+ptr_as_ptr = "warn" # pedantic
+rest_pat_in_fully_bound_structs = "warn" # restriction
+same_functions_in_if_condition = "warn" # pedantic
+semicolon_if_nothing_returned = "warn" # pedantic
+separated_literal_suffix = "warn" # restriction
+shadow_unrelated = "warn" # restriction
+similar_names = "warn" # pedantic
+single_match_else = "warn" # pedantic
+string_lit_as_bytes = "warn" # nursery
+string_to_string = "warn" # restriction
+suspicious_operation_groupings = "warn" # nursery
+todo = "warn" # restriction
+unimplemented = "warn" # restriction
+unnested_or_patterns = "warn" # pedantic
+unused_self = "warn" # pedantic
+use_debug = "warn" # restriction
+used_underscore_binding = "warn" # pedantic
+useless_let_if_seq = "warn" # nursery
+verbose_file_reads = "warn" # restriction
+wildcard_dependencies = "warn" # cargo
+wildcard_imports = "warn" # pedantic
+zero_sized_map_values = "warn" # pedantic

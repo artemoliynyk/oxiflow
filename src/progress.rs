@@ -105,11 +105,11 @@ impl Oxibar {
     ///
     ///  `(10, 2, 23)`, where `(total_cells, relative_cells_progress, percent_progress)`
     fn calculate_values(&self, total: u32, current: u32) -> (u32, u32, u32) {
-        let _total = total as f32;
+        let total = total as f32;
         let _current = current as f32;
 
         let multiplier = 100.0 / self.size as f32;
-        let rate: f32 = self.size as f32 / _total;
+        let rate: f32 = self.size as f32 / total;
         let rel_curr = rate * current as f32;
         let percent = rel_curr * multiplier;
 
