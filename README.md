@@ -31,7 +31,7 @@ This is pure pet fun project, but we all need some sort of plan, right?
 Planned features:
 - [x] Base functionality (concurrent calls, repeats, timeout, per-code report)
 - [x] Progress and verbosity
-- [ ] Delay between repeats
+- [x] Delay between repeats
 - [ ] Reporting component
   - [ ] Toggleable coloured output
   - [ ] Per-URL requests report

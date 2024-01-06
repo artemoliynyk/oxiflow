@@ -21,13 +21,17 @@ struct Args {
     #[arg(short, long, default_value_t = 2)]
     timeout: u8,
 
+    /// delay in seconds between repeating requests batche (concurrent request are concurrent!)
+    #[arg(short, long, default_value_t = 0)]
+    delay: u8,
+
     /// print extra non-debug information
-    #[arg(short, long)]
+    #[arg(long)]
     verbose: bool,
 
     /// print debug information.
     /// if used with --verbose – enable a "trace mode", with a lot of extra info
-    #[arg(short, long)]
+    #[arg(long)]
     debug: bool,
 }
 
@@ -43,13 +47,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     log_builder::new().filter_level(log_level).init();
 
+    println!("Calling target '{}'", &args.address);
     println!(
-        "Calling target '{}', concurren clients: {}, repeat: {}, timeout {} sec.",
-        &args.address, &args.concurrent, &args.repeat, &args.timeout
+        "Concurren clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec",
+        &args.concurrent, &args.repeat, &args.timeout, &args.delay
     );
 
-    let result =
-        worker::perform_requests(args.address, args.timeout, args.concurrent, args.repeat).await;
+    if args.repeat > 0 && args.delay >= 30 {
+        println!(
+            "\n{}\nWarning: you have set delay between repeats to {}s",
+            "=".repeat(45),
+            &args.delay,
+        );
+        println!("It seems like unreasonable high delay\n{}\n", "=".repeat(45));
+    }
+
+    let result = worker::perform_requests(
+        args.address,
+        args.timeout,
+        args.concurrent,
+        args.repeat,
+        args.delay,
+    )
+    .await;
 
     println!("{} Results {}", "=".repeat(13), "=".repeat(13));
     println!("Successes: {}", result.total_responces.count);
