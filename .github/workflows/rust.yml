@@ -23,6 +23,8 @@ jobs:
         which rustc
         rustc -V
         apt-cache search rust~i
+        apt-cache policy rustc~i
+        apt-get install rustc
       
     - name: Build
       run: cargo build --verbose
