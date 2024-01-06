@@ -22,7 +22,7 @@ jobs:
         rustup update 1.75.0
         which rustc
         rustc -V
-        apt-cache search rust
+        apt-cache search rust~i
       
     - name: Build
       run: cargo build --verbose
