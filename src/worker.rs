@@ -28,7 +28,9 @@ pub async fn perform_requests(
         }
 
         while let Some(res) = handles.join_next().await {
-            progress_bar.advance().print();
+            if log::max_level() <= log::Level::Warn {
+                progress_bar.advance().print();
+            }
 
             match res.unwrap() {
                 Ok(client_response) => {
