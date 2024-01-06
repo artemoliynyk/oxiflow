@@ -18,18 +18,13 @@ jobs:
     - uses: actions/checkout@v3
     - name: Rust 1.75.0
       run: |
-        rm -f /home/runner/.cargo/bin/*
+        sudo apt-get remove -y rustc
+        sudo apt-get autoremove
+        rm -ff /home/runner/.cargo/
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
         chmod +x rustup.sh
         ./rustup.sh -y
         rustup install 1.75.0
-        which rustc
-        rustc -V
-        
-        
-      #apt-cache search rust~i
-      #sudo apt-cache policy rustc~i
-      #sudo apt-get install rustc
       
     - name: Build
       run: cargo build --verbose
