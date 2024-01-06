@@ -17,7 +17,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Rust 1.75.0
-      run: rustup update 1.75.0
+      run: |
+        rm -fr /home/runner/.cargo/
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+        chmod +x rustup.sh
+        ./rustup.sh -y
+        rustup install 1.75.0
+      
     - name: Build
       run: cargo build --verbose
     - name: Run tests
