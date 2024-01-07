@@ -6,7 +6,10 @@ use self::result::WorkerResult;
 use crate::{http::client, progress::Oxibar};
 use log;
 
+pub const SUPPORTED_METHODS: [&str; 5] = ["GET", "POST", "DELETE", "PUT", "PATCH"];
+
 pub async fn perform_requests(
+    method: String,
     address: String,
     timeout: u8,
     concurrent: u8,
@@ -25,9 +28,20 @@ pub async fn perform_requests(
         }
 
         for _ in 0..concurrent {
-            let req = worker.get(address.clone());
-            let future = client::execute_request(req);
-            handles.spawn(future);
+            worker
+                .resolve_request(method.clone(), address.clone())
+                .map_or_else(
+                    |_| {
+                        log::info!("Wrong HTTP method - skip and count skipped");
+
+                        log::error!("Error calling URL - wrong method: '{}'", method);
+                        result.inc_skipped();
+                    },
+                    |req| {
+                        let future = client::execute_request(req);
+                        handles.spawn(future);
+                    },
+                );
         }
 
         while let Some(res) = handles.join_next().await {
@@ -41,7 +55,7 @@ pub async fn perform_requests(
                     log::info!(target: "worker::request", "Response: {}", client_response);
                 }
                 Err(client_error) => {
-                    result.count_error();
+                    result.inc_error();
                     log::info!(target: "worker::request", "Failed: {}", client_error);
                 }
             }
@@ -55,4 +69,8 @@ pub async fn perform_requests(
     }
 
     result
+}
+
+pub fn is_supported_method(method: &str) -> bool {
+    SUPPORTED_METHODS.contains(&method.trim().to_uppercase().as_str())
 }

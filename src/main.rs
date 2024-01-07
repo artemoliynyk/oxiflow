@@ -9,6 +9,10 @@ struct Args {
     /// address to call
     address: String,
 
+    /// which HTTP method to use for a call, try -mHELP to get list of supported methods
+    #[arg(short, long, default_value_t = String::from("GET"))]
+    method: String,
+
     /// how many request to send concurrently
     #[arg(short, long, default_value_t = 1)]
     concurrent: u8,
@@ -21,7 +25,8 @@ struct Args {
     #[arg(short, long, default_value_t = 2)]
     timeout: u8,
 
-    /// delay in seconds between repeating requests batche (concurrent request are concurrent!)
+    /// delay in seconds between repeating requests batches.
+    /// Concurrent requests performed concurrently with no delay
     #[arg(short, long, default_value_t = 0)]
     delay: u8,
 
@@ -47,7 +52,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     log_builder::new().filter_level(log_level).init();
 
-    println!("Calling target '{}'", &args.address);
+    if !worker::is_supported_method(&args.method) {
+        println!("Defined method is not supported '{}'", &args.method);
+        println!(
+            "Supported methods: {}",
+            worker::SUPPORTED_METHODS.join(", ")
+        );
+
+        return Err("Wrong argument".into());
+    }
+
+    println!("Calling target: {} {}", &args.method, &args.address);
     println!(
         "Concurren clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec",
         &args.concurrent, &args.repeat, &args.timeout, &args.delay
@@ -59,10 +74,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "=".repeat(45),
             &args.delay,
         );
-        println!("It seems like unreasonable high delay\n{}\n", "=".repeat(45));
+        println!(
+            "It seems like unreasonable high delay\n{}\n",
+            "=".repeat(45)
+        );
     }
 
     let result = worker::perform_requests(
+        args.method,
         args.address,
         args.timeout,
         args.concurrent,
@@ -74,6 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{} Results {}", "=".repeat(13), "=".repeat(13));
     println!("Successes: {}", result.total_responces.count);
     println!("Failures: {}", result.total_errors);
+    println!("Skipped: {}", result.total_skipped);
     println!(
         "Average response time: {} ms",
         result.total_responces.average_ms
