@@ -35,7 +35,7 @@ Planned features:
 - [x] Base functionality (concurrent calls, repeats, timeout, per-code report)
 - [x] Progress and verbosity
 - [x] Delay between repeats (https://github.com/artemoliynyk/oxiflow/pull/3)
-- [ ] HTTP Methods support:
+- [x] HTTP Methods support: (https://github.com/artemoliynyk/oxiflow/pull/4)
   - [x] GET
   - [x] POST
   - [x] DELETE
