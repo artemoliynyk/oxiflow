@@ -2,7 +2,7 @@ use crate::http::response::ClientResponse;
 
 /// Struct to count response number and average response time (ms) by code.
 ///
-/// For example: store 2 responses and 120 ms as an average: 
+/// For example: store 2 responses and 120 ms as an average:
 /// `ResponseCountAverage { count: 2, average: 120 };`
 #[derive(Default, Clone, Copy)]
 pub struct ResponseCountAverage {
@@ -26,6 +26,7 @@ pub struct WorkerResult {
     // pub average_response: u128,
     pub total_responces: ResponseCountAverage,
     pub total_errors: u32,
+    pub total_skipped: u32,
     pub total_by_code: [ResponseCountAverage; 6],
 }
 
@@ -36,6 +37,7 @@ impl Default for WorkerResult {
         WorkerResult {
             total_responces: ResponseCountAverage::default(),
             total_errors: 0,
+            total_skipped: 0,
             total_by_code: codes,
         }
     }
@@ -53,7 +55,11 @@ impl WorkerResult {
         self.count_particular_code(response);
     }
 
-    pub fn count_error(&mut self) {
+    pub fn inc_skipped(&mut self) {
+        self.total_skipped += 1;
+    }
+
+    pub fn inc_error(&mut self) {
         self.total_errors += 1;
     }
 

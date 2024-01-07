@@ -20,9 +20,12 @@ There is no delay neither between requests nor between batches by default (and *
 ## Options
 _At any time – refer to the help for currently available options._
 
+-  `-m, --method <METHOD>` – which HTTP method to use when calling URL (GET, POST, etc.). Number of supported methods might change, so the best way is to do `-mHELP` and all the supported methods will be listed
 - `-c, --concurrent <CONCURRENT>` - define many request to send in parallel (might be systems dependent)
 - `-r, --repeat <REPEAT>` - how many times to repeat defined batch of concurrent requestss
 - `-t, --timeout <TIMEOUT>` - response timeout in seconds, if server won't respond in required interval – connection will be terminated and requests will be considered as failed
+- `-d, --delay <DELAY>` - delay in seconds between repeating requests batches.
+Concurrent reuqests are performed sumultaneosly, without delay. Consider disabling concurrence with `-c0` if you want to have delay between each request
 
 
 # Roadmap
@@ -32,23 +35,23 @@ Planned features:
 - [x] Base functionality (concurrent calls, repeats, timeout, per-code report)
 - [x] Progress and verbosity
 - [x] Delay between repeats (https://github.com/artemoliynyk/oxiflow/pull/3)
+- [ ] HTTP Methods support:
+  - [x] GET
+  - [x] POST
+  - [x] DELETE
+  - [x] PUT
+  - [x] PATCH
+- [ ] Testing scenarios:
+  - [ ] URLs file (with methods)
+  - [ ] Pre-test actions (Auth)
 - [ ] Reporting component
   - [ ] Toggleable coloured output
   - [ ] Per-URL requests report
   - [ ] Report export (CSV, XML)
   - [ ] Visual reporting (plotting)
-- [ ] HTTP Methods support:
-  - [x] GET
-  - [ ] POST
-  - [ ] DELETE
-  - [ ] PUT
-  - [ ] PATCH
 - [ ] Additional HTTP fields support:
   - [ ] Support passing headers
   - [ ] Support passing cookies
 - [ ] Authentication support:
   - [ ] Obtain and reuse Bearer Token
   - [ ] Keep cookies between requests during the session
-- [ ] Testing scenarios:
-  - [ ] URLs file (with methods)
-  - [ ] Pre-test actions (Auth)

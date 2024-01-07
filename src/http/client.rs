@@ -1,8 +1,13 @@
-use std::time::{Duration, Instant};
+use std::{
+    error::Error,
+    time::{Duration, Instant},
+};
 
 use reqwest::{Client, ClientBuilder, RequestBuilder};
 
-use super::{response::ClientResponse, error::ClientError};
+use crate::worker;
+
+use super::{error::ClientError, response::ClientResponse};
 
 pub type ClientResult = std::result::Result<ClientResponse, ClientError>;
 
@@ -35,11 +40,37 @@ impl HttpClient {
         self.client.put(url)
     }
 
+    pub fn patch(&self, url: String) -> RequestBuilder {
+        self.client.patch(url)
+    }
+
     pub fn delete(&self, url: String) -> RequestBuilder {
         self.client.delete(url)
     }
-}
 
+    pub fn resolve_request(
+        &self,
+        method: String,
+        url: String,
+    ) -> Result<RequestBuilder, Box<dyn Error>> {
+        let method_upper = method.trim().to_uppercase();
+
+        if !worker::is_supported_method(&method) {
+            return Err(format!("Unsupported method: '{}'", &method).into());
+        }
+
+        let req = match method_upper.as_str() {
+            "GET" => self.get(url),
+            "POST" => self.post(url),
+            "PUT" => self.put(url),
+            "PATCH" => self.patch(url),
+            "DELETE" => self.delete(url),
+            _ => panic!("Unmatched method found, previous checks failed. This is a bug!"),
+        };
+
+        Ok(req)
+    }
+}
 
 pub async fn execute_request(request: RequestBuilder) -> ClientResult {
     let start = Instant::now();
