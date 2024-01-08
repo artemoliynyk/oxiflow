@@ -1,4 +1,9 @@
-use crate::http::response::ClientResponse;
+//! Worker result module. This isn't `std::result::Result` and not related to it.
+//! 
+//! This result stores how many actuall server reponses were receiver, how many failed 
+//! and what what the average response time for each HTTP code.
+
+use super::http::response::ClientResponse;
 
 /// Struct to count response number and average response time (ms) by code.
 ///

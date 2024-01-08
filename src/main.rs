@@ -1,6 +1,6 @@
 use clap::Parser;
 use env_logger::Builder as log_builder;
-use oxiflow::worker;
+use oxiflow::components::worker;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
