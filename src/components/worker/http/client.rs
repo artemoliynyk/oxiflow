@@ -5,9 +5,9 @@ use std::{
 
 use reqwest::{Client, ClientBuilder, RequestBuilder};
 
-use crate::worker;
+use crate::components::worker;
 
-use super::{error::ClientError, response::ClientResponse};
+use super::{response::ClientResponse, error::ClientError};
 
 pub type ClientResult = std::result::Result<ClientResponse, ClientError>;
 

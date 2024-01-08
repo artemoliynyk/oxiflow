@@ -1,3 +1,5 @@
+//! Small but flexible "in-place" progress bar. Styleable, resizable.
+
 use std::io::Write;
 
 const _DEFAULT_WIDTH: u32 = 20;
@@ -9,7 +11,7 @@ pub struct Oxibar {
     /// current progress (current item)
     current: u32,
 
-    /// progress bar width in chars
+    /// progress bar width
     size: u32,
 
     /// visual represntation of the empty progress barr cells (default: `-`)
@@ -44,6 +46,9 @@ impl Default for Oxibar {
 }
 
 impl Oxibar {
+    /// create new progress bar for `total` items, starting current progress from 0.
+    /// 
+    /// This total number will represent 100% progress
     pub fn new(total: u32) -> Oxibar {
         Oxibar {
             total,
@@ -69,16 +74,27 @@ impl Oxibar {
         self
     }
 
+    /// set characters to represent empty progress.
+    /// 
+    /// Example: if minus (-) char used – progress will look like this: `[--------]`
     pub fn set_style_empty(&mut self, style: &str) -> &mut Self {
         self.style_empty = style.to_string();
 
         self
     }
+
+    /// set characters to represent completed part of progress, filled bar.
+    /// 
+    /// Example: if equal (=) char used – progress will look like this: `[===>----]`
     pub fn set_style_filled(&mut self, style: &str) -> &mut Self {
         self.style_filled = style.to_string();
 
         self
     }
+
+    /// set characters to represent current position of progress.
+    /// 
+    /// Example: if plus (+) char used – progress will look like this: `[===+----]`
     pub fn set_style_cursor(&mut self, style: &str) -> &mut Self {
         self.style_cursor = style.to_string();
 
@@ -152,7 +168,7 @@ impl Oxibar {
 mod tests {
     use std::{thread, time::Duration};
 
-    use crate::progress::Oxibar;
+    use crate::components::progressbar::Oxibar;
 
     #[test]
     fn progress_calculate_with_10() {

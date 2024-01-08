@@ -1,10 +1,18 @@
+//! Worker – is a main "namespace" for all HTTP-related methods and implementation.
+//! 
+//! This mod hosts HTTP client, response, result and error.
+//! 
+//! See corresponding module docs for more details
+
+pub mod http;
 pub mod result;
 
 use std::{thread, time::Duration};
 
-use self::result::WorkerResult;
-use crate::{http::client, progress::Oxibar};
+use crate::components::{worker::http::client, progressbar::Oxibar};
 use log;
+
+use self::result::WorkerResult;
 
 pub const SUPPORTED_METHODS: [&str; 5] = ["GET", "POST", "DELETE", "PUT", "PATCH"];
 
