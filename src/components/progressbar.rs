@@ -1,7 +1,7 @@
 //! Small but flexible "in-place" progress bar. Styleable, resizable.
-
 use std::io::Write;
 
+/// default progress bar size (width)
 const _DEFAULT_WIDTH: u32 = 20;
 
 pub struct Oxibar {
@@ -46,7 +46,7 @@ impl Default for Oxibar {
 }
 
 impl Oxibar {
-    /// create new progress bar for `total` items, starting current progress from 0.
+    /// Create new progress bar for `total` items, starting current progress from 0.
     /// 
     /// This total number will represent 100% progress
     pub fn new(total: u32) -> Oxibar {
@@ -74,7 +74,7 @@ impl Oxibar {
         self
     }
 
-    /// set characters to represent empty progress.
+    /// Set characters to represent empty progress.
     /// 
     /// Example: if minus (-) char used – progress will look like this: `[--------]`
     pub fn set_style_empty(&mut self, style: &str) -> &mut Self {
@@ -83,7 +83,7 @@ impl Oxibar {
         self
     }
 
-    /// set characters to represent completed part of progress, filled bar.
+    /// Set characters to represent completed part of progress, filled bar.
     /// 
     /// Example: if equal (=) char used – progress will look like this: `[===>----]`
     pub fn set_style_filled(&mut self, style: &str) -> &mut Self {
@@ -92,7 +92,7 @@ impl Oxibar {
         self
     }
 
-    /// set characters to represent current position of progress.
+    /// Set characters to represent current position of progress.
     /// 
     /// Example: if plus (+) char used – progress will look like this: `[===+----]`
     pub fn set_style_cursor(&mut self, style: &str) -> &mut Self {
@@ -132,12 +132,26 @@ impl Oxibar {
         (self.size, rel_curr.floor() as u32, percent.ceil() as u32)
     }
 
+    /// Increase number of processed items by one. Useful in per-item progress loop
     pub fn advance(&mut self) -> &Self {
         self.current += 1;
 
         self
     }
+    /// Increase number of processed items by defined value.
+    /// 
+    /// Useful for batch progress updating
+    pub fn advance_multiple(&mut self, num: u32) -> &Self {
+        self.current += num;
 
+        self
+    }
+
+    /// Print current progress on the same line overwritting previous progress.
+    /// 
+    /// This methong use `\r` escape sequence, which is supported by the most terminal.
+    /// 
+    /// _Please note:_ printing anything between `print()` calls will result in broken output
     pub fn print(&self) {
         let (p_total, p_curr, percent) = self.calculate_values(self.total, self.current);
         let left = p_total - p_curr;
@@ -198,6 +212,8 @@ mod tests {
 
         for _ in 0..total {
             progress_bar.advance().print();
+
+            // it will slow tests down, but it helps to visually inspect the progress
             thread::sleep(Duration::from_millis(100));
         }
     }
@@ -217,6 +233,7 @@ mod tests {
             progress_bar.advance().print();
             assert_eq!(progress_bar.current, i + 1);
 
+            // it will slow tests down, but it helps to visually inspect the progress
             thread::sleep(Duration::from_millis(100));
         }
     }
