@@ -1,3 +1,5 @@
+//! HTTP client response representation
+
 #[derive(Default)]
 pub struct ClientResponse {
     /// HTTP response code
