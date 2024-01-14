@@ -1,3 +1,5 @@
+//! HTTP client to perform the requests
+
 use std::{
     error::Error,
     time::{Duration, Instant},

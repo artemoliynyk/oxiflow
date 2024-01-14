@@ -1,3 +1,5 @@
+//! Error HTTP client representation
+
 #[derive(Debug, Default)]
 pub struct ClientError {
     error: String,
@@ -22,6 +24,7 @@ impl ClientError {
         }
     }
 }
+
 impl std::fmt::Display for ClientError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
