@@ -65,93 +65,12 @@ impl Cli {
 
     /// Create a Cli instance with all th eargs
     pub fn new(args: IntoIter<OsString>) -> Result<Cli, clap::error::Error> {
-        // Cli {
-        //     args: Args::parse_from(args),
-        // }
-
         Args::try_parse_from(args).map_or_else(
             |err: clap::error::Error| {
                 Err(err)
-                // .print().expect("Unable to print error details");
             },
             |parsed_args| Ok(Cli { args: parsed_args }),
         )
-
-        // let command = clap::Command::new(app_info::NAME)
-        //     .version(app_info::VERSION)
-        //     .author(app_info::AUTHOR)
-        //     .about(app_info::DESCRIPTION)
-
-        //     .arg(
-        //         Arg::new("verbose")
-        //             .help("Verbosity level accumulator, where '-v' some verbosity and '-vvv' very verbose")
-        //             .short('v')
-        //             .long("verbose")
-        //             .action(ArgAction::Count)
-        //     )
-        //     .next_help_heading("Address definition")
-        //     .args([
-        //         Arg::new("address")
-        //             .help("Address to call")
-        //             .conflicts_with("file")
-        //             .required_unless_present("file"),
-
-        //         Arg::new("method")
-        //             .help("which HTTP method to use for a call, try -mHELP to get list of supported methods")
-        //             .conflicts_with("file")
-        //             .short('m')
-        //             .long("method")
-        //             .default_value("GET"),
-
-        //         Arg::new("file")
-        //             .help("config file with URLs definition to call")
-        //             .required_unless_present("address")
-        //             .short('f')
-        //             .long("file")
-        //             .default_missing_value("")
-        //     ])
-        //     .next_help_heading("Test flow controls")
-        //     .args([
-        //         Arg::new("repeat")
-        //             .help("how many times to repeat")
-        //             .short('r')
-        //             .long("repeat")
-        //             .default_value("1")
-        //             .value_parser(clap::value_parser!(u8)),
-
-        //         Arg::new("concurrent")
-        //             .help("how many request to send concurrently")
-        //             .short('c')
-        //             .long("concurrent")
-        //             .default_value("1")
-        //             .value_parser(clap::value_parser!(u8)),
-
-        //         Arg::new("timeout")
-        //             .help("request timeout in seconds")
-        //             .short('t')
-        //             .long("timeout")
-        //             .default_value("1")
-        //             .value_parser(clap::value_parser!(u8)),
-
-        //         Arg::new("delay")
-        //             .help("delay in seconds between repeating requests batches.".to_owned() + "\nConcurrent requests performed concurrently with no delay.")
-        //             .short('d')
-        //             .long("delay")
-        //             .default_value("1")
-        //             .value_parser(clap::value_parser!(u8)),
-        //     ]);
-
-        // let matches = command.get_matches();
-
-        // println!("verbose: {}", matches.get_count("verbose"));
-        // println!("address: {}", matches.get_one::<String>("address").unwrap());
-        // println!("method: {}", matches.get_one::<String>("method").unwrap());
-        // println!("file: {}", matches.get_one::<String>("file").unwrap_or(&String::new()));
-        // println!("repeat: {}", matches.get_one::<u8>("repeat").unwrap());
-        // println!("concurrent: {}", matches.get_one::<u8>("concurrent").unwrap());
-        // println!("timeout: {}", matches.get_one::<u8>("timeout").unwrap());
-        // println!("delay: {}", matches.get_one::<u8>("delay").unwrap());
-        // println!("{}", "*".repeat(10));
     }
 
     // set log level based on the CLI args passed
@@ -240,6 +159,15 @@ mod tests {
     fn test_wrong_values() {
         let test_args =
             self::create_iter_from_cmd("programm_name.exe --repeat TWICE http://error.local/");
+
+        Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_address_and_file_error() {
+        let test_args =
+            self::create_iter_from_cmd("programm_name.exe --file test.txt http://error.local/");
 
         Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
     }

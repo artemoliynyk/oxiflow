@@ -1,3 +1,5 @@
+#![allow(clippy::print_stderr, clippy::print_stdout)]
+
 use oxiflow::components::cli::Cli;
 use oxiflow::components::worker;
 
@@ -11,7 +13,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
     cli.set_log_level();
-    // dbg!(&cli.args);
 
     if !worker::is_supported_method(&cli.args.method) {
         println!("Defined method is not supported '{}'", &cli.args.method);

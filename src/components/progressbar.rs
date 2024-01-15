@@ -1,4 +1,5 @@
 //! Small but flexible "in-place" progress bar. Styleable, resizable.
+#![allow(clippy::print_stderr, clippy::print_stdout)]
 use std::io::Write;
 
 /// default progress bar size (width)

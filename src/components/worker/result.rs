@@ -1,7 +1,9 @@
 //! Worker result module. This isn't `std::result::Result` and not related to it.
-//! 
-//! This result stores how many actuall server reponses were receiver, how many failed 
+//!
+//! This result stores how many actuall server reponses were receiver, how many failed
 //! and what what the average response time for each HTTP code.
+
+#![allow(clippy::print_stderr, clippy::print_stdout)]
 
 use super::http::response::ClientResponse;
 
