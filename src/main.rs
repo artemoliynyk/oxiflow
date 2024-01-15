@@ -1,59 +1,21 @@
-use clap::Parser;
-use env_logger::Builder as log_builder;
+#![allow(clippy::print_stderr, clippy::print_stdout)]
+
+use oxiflow::components::cli::Cli;
 use oxiflow::components::worker;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-/// Simple, fast, concurrent load tester with minimal reporting
-struct Args {
-    /// address to call
-    address: String,
-
-    /// which HTTP method to use for a call, try -mHELP to get list of supported methods
-    #[arg(short, long, default_value_t = String::from("GET"))]
-    method: String,
-
-    /// how many request to send concurrently
-    #[arg(short, long, default_value_t = 1)]
-    concurrent: u8,
-
-    /// how many times to repeat
-    #[arg(short, long, default_value_t = 1)]
-    repeat: u8,
-
-    /// request timeout in seconds
-    #[arg(short, long, default_value_t = 2)]
-    timeout: u8,
-
-    /// delay in seconds between repeating requests batches.
-    /// Concurrent requests performed concurrently with no delay
-    #[arg(short, long, default_value_t = 0)]
-    delay: u8,
-
-    /// print extra non-debug information
-    #[arg(long)]
-    verbose: bool,
-
-    /// print debug information.
-    /// if used with --verbose – enable a "trace mode", with a lot of extra info
-    #[arg(long)]
-    debug: bool,
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = Args::parse();
-
-    let log_level: log::LevelFilter = match (args.verbose, args.debug) {
-        (true, true) => log::LevelFilter::Trace,
-        (false, true) => log::LevelFilter::Debug,
-        (true, false) => log::LevelFilter::Info,
-        (false, false) => log::LevelFilter::Warn,
+    let cli = match Cli::from_os_env() {
+        Ok(instance) => instance,
+        Err(err) => {
+            err.print().expect("Unable to format error details");
+            return Err("Wrong arguments".into());
+        }
     };
-    log_builder::new().filter_level(log_level).init();
+    cli.set_log_level();
 
-    if !worker::is_supported_method(&args.method) {
-        println!("Defined method is not supported '{}'", &args.method);
+    if !worker::is_supported_method(&cli.args.method) {
+        println!("Defined method is not supported '{}'", &cli.args.method);
         println!(
             "Supported methods: {}",
             worker::SUPPORTED_METHODS.join(", ")
@@ -62,17 +24,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err("Wrong argument".into());
     }
 
-    println!("Calling target: {} {}", &args.method, &args.address);
+    println!("Calling target: {} {}", &cli.args.method, &cli.args.address);
     println!(
         "Concurren clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec",
-        &args.concurrent, &args.repeat, &args.timeout, &args.delay
+        &cli.args.concurrent, &cli.args.repeat, &cli.args.timeout, &cli.args.delay
     );
 
-    if args.repeat > 0 && args.delay >= 30 {
+    if cli.args.repeat > 0 && cli.args.delay >= 30 {
         println!(
             "\n{}\nWarning: you have set delay between repeats to {}s",
             "=".repeat(45),
-            &args.delay,
+            &cli.args.delay,
         );
         println!(
             "It seems like unreasonable high delay\n{}\n",
@@ -81,12 +43,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let result = worker::perform_requests(
-        args.method,
-        args.address,
-        args.timeout,
-        args.concurrent,
-        args.repeat,
-        args.delay,
+        cli.args.method,
+        cli.args.address,
+        cli.args.timeout,
+        cli.args.concurrent,
+        cli.args.repeat,
+        cli.args.delay,
     )
     .await;
 
