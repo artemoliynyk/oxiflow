@@ -1,5 +1,7 @@
 //! Helper class to build CLI args parser
-use clap::Parser;
+use std::{ffi::OsString, vec::IntoIter};
+
+use clap::{ArgAction, Parser};
 use env_logger::Builder as log_builder;
 
 #[derive(Parser, Debug)]
@@ -7,66 +9,238 @@ use env_logger::Builder as log_builder;
 /// Simple, fast, concurrent load tester with minimal reporting
 pub struct Args {
     /// address to call
+    #[arg(
+        conflicts_with("file"),
+        required_unless_present("file"),
+        default_value = ""
+    )]
     pub address: String,
 
+    /// config file with URLs definition to call
+    #[arg(
+        long,
+        short('f'),
+        conflicts_with("address"),
+        required_unless_present("address"),
+        default_value = ""
+    )]
+    pub file: String,
+
     /// which HTTP method to use for a call, try -mHELP to get list of supported methods
-    #[arg(short, long, default_value_t = String::from("GET"))]
+    #[arg(long, short('m'), conflicts_with("file"), default_value = "GET")]
     pub method: String,
 
     /// how many request to send concurrently
-    #[arg(short, long, default_value_t = 1)]
+    #[arg(long, short('c'), default_value_t = 1)]
     pub concurrent: u8,
 
     /// how many times to repeat
-    #[arg(short, long, default_value_t = 1)]
+    #[arg(long, short('r'), default_value_t = 1)]
     pub repeat: u8,
 
     /// request timeout in seconds
-    #[arg(short, long, default_value_t = 2)]
+    #[arg(long, short('t'), default_value_t = 2)]
     pub timeout: u8,
 
     /// delay in seconds between repeating requests batches.
     /// Concurrent requests performed concurrently with no delay
-    #[arg(short, long, default_value_t = 0)]
+    #[arg(long, short('d'), default_value_t = 0)]
     pub delay: u8,
 
-    /// print extra non-debug information
-    #[arg(long)]
-    pub verbose: bool,
-
-    /// print debug information.
-    /// if used with --verbose – enable a "trace mode", with a lot of extra info
-    #[arg(long)]
-    pub debug: bool,
+    /// Verbosity level accumulator, where '-v' some verbosity and '-vvvv' very verbose (trace)
+    #[arg(short('v'), action(ArgAction::Count))]
+    pub verbosity: u8,
 }
 
 pub struct Cli {
     pub args: Args,
 }
 
-impl Default for Cli {
-    fn default() -> Self {
-        Cli {
-            args: Args::parse(),
-        }
-    }
-}
 impl Cli {
+    pub fn from_os_env() -> Result<Cli, clap::error::Error> {
+        let args_collection: Vec<OsString> = std::env::args_os().collect();
+
+        Cli::new(args_collection.into_iter())
+    }
+
     /// Create a Cli instance with all th eargs
-    pub fn new() -> Cli {
-        Cli::default()
+    pub fn new(args: IntoIter<OsString>) -> Result<Cli, clap::error::Error> {
+        // Cli {
+        //     args: Args::parse_from(args),
+        // }
+
+        Args::try_parse_from(args).map_or_else(
+            |err: clap::error::Error| {
+                Err(err)
+                // .print().expect("Unable to print error details");
+            },
+            |parsed_args| Ok(Cli { args: parsed_args }),
+        )
+
+        // let command = clap::Command::new(app_info::NAME)
+        //     .version(app_info::VERSION)
+        //     .author(app_info::AUTHOR)
+        //     .about(app_info::DESCRIPTION)
+
+        //     .arg(
+        //         Arg::new("verbose")
+        //             .help("Verbosity level accumulator, where '-v' some verbosity and '-vvv' very verbose")
+        //             .short('v')
+        //             .long("verbose")
+        //             .action(ArgAction::Count)
+        //     )
+        //     .next_help_heading("Address definition")
+        //     .args([
+        //         Arg::new("address")
+        //             .help("Address to call")
+        //             .conflicts_with("file")
+        //             .required_unless_present("file"),
+
+        //         Arg::new("method")
+        //             .help("which HTTP method to use for a call, try -mHELP to get list of supported methods")
+        //             .conflicts_with("file")
+        //             .short('m')
+        //             .long("method")
+        //             .default_value("GET"),
+
+        //         Arg::new("file")
+        //             .help("config file with URLs definition to call")
+        //             .required_unless_present("address")
+        //             .short('f')
+        //             .long("file")
+        //             .default_missing_value("")
+        //     ])
+        //     .next_help_heading("Test flow controls")
+        //     .args([
+        //         Arg::new("repeat")
+        //             .help("how many times to repeat")
+        //             .short('r')
+        //             .long("repeat")
+        //             .default_value("1")
+        //             .value_parser(clap::value_parser!(u8)),
+
+        //         Arg::new("concurrent")
+        //             .help("how many request to send concurrently")
+        //             .short('c')
+        //             .long("concurrent")
+        //             .default_value("1")
+        //             .value_parser(clap::value_parser!(u8)),
+
+        //         Arg::new("timeout")
+        //             .help("request timeout in seconds")
+        //             .short('t')
+        //             .long("timeout")
+        //             .default_value("1")
+        //             .value_parser(clap::value_parser!(u8)),
+
+        //         Arg::new("delay")
+        //             .help("delay in seconds between repeating requests batches.".to_owned() + "\nConcurrent requests performed concurrently with no delay.")
+        //             .short('d')
+        //             .long("delay")
+        //             .default_value("1")
+        //             .value_parser(clap::value_parser!(u8)),
+        //     ]);
+
+        // let matches = command.get_matches();
+
+        // println!("verbose: {}", matches.get_count("verbose"));
+        // println!("address: {}", matches.get_one::<String>("address").unwrap());
+        // println!("method: {}", matches.get_one::<String>("method").unwrap());
+        // println!("file: {}", matches.get_one::<String>("file").unwrap_or(&String::new()));
+        // println!("repeat: {}", matches.get_one::<u8>("repeat").unwrap());
+        // println!("concurrent: {}", matches.get_one::<u8>("concurrent").unwrap());
+        // println!("timeout: {}", matches.get_one::<u8>("timeout").unwrap());
+        // println!("delay: {}", matches.get_one::<u8>("delay").unwrap());
+        // println!("{}", "*".repeat(10));
     }
 
     // set log level based on the CLI args passed
     pub fn set_log_level(&self) {
-        let log_level: log::LevelFilter = match (&self.args.verbose, &self.args.debug) {
-            (true, true) => log::LevelFilter::Trace,
-            (false, true) => log::LevelFilter::Debug,
-            (true, false) => log::LevelFilter::Info,
-            (false, false) => log::LevelFilter::Warn,
+        let log_level: log::LevelFilter = match &self.args.verbosity {
+            1 => log::LevelFilter::Warn,
+            2 => log::LevelFilter::Info,
+            3 => log::LevelFilter::Debug,
+            4.. => log::LevelFilter::Trace,
+            _ => log::LevelFilter::Error,
         };
         log_builder::new().filter_level(log_level).init();
-        
-        log::debug!("Error log level set to {}", log_level);
+
+        log::warn!("Log level set to {}", log_level);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{ffi::OsString, vec::IntoIter};
+
+    use crate::components::cli::Cli;
+
+    fn create_iter_from_cmd(cmd: &str) -> IntoIter<OsString> {
+        let collection: Vec<OsString> = cmd.split(' ').map(OsString::from).collect();
+
+        collection.into_iter()
+    }
+
+    #[test]
+    fn test_long_address() {
+        let test_args = self::create_iter_from_cmd(
+            "programm_name.exe -vvv --method TEST123 --concurrent 2 --repeat 3 --timeout 4 \
+            --delay 5 http://address.local/long-test",
+        );
+
+        let cli = Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
+
+        assert_eq!(cli.args.verbosity, 3);
+        assert_eq!(&cli.args.method, "TEST123");
+        assert_eq!(cli.args.concurrent, 2);
+        assert_eq!(cli.args.repeat, 3);
+        assert_eq!(cli.args.timeout, 4);
+        assert_eq!(cli.args.delay, 5);
+
+        assert_eq!(&cli.args.address, "http://address.local/long-test");
+    }
+
+    #[test]
+    fn test_short_address() {
+        let test_args = self::create_iter_from_cmd(
+            "programm_name.exe -vvvv -mTEST123 -c2 -r3 -t4 -d5 http://address.local/short-test",
+        );
+
+        let cli = Cli::new(test_args)
+            .map_or_else(|_| panic!("Unable to create CLI"), |instance| instance);
+
+        assert_eq!(cli.args.verbosity, 4);
+        assert_eq!(&cli.args.method, "TEST123");
+        assert_eq!(cli.args.concurrent, 2);
+        assert_eq!(cli.args.repeat, 3);
+        assert_eq!(cli.args.timeout, 4);
+        assert_eq!(cli.args.delay, 5);
+
+        assert_eq!(&cli.args.address, "http://address.local/short-test");
+    }
+
+    #[test]
+    fn test_short_file() {
+        let test_args = self::create_iter_from_cmd("programm_name.exe -c3 -r2 -t1 -f filename.txt");
+
+        let cli = Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
+
+        assert_eq!(cli.args.verbosity, 0);
+        assert_eq!(&cli.args.method, "GET"); // default
+        assert_eq!(cli.args.concurrent, 3);
+        assert_eq!(cli.args.repeat, 2);
+        assert_eq!(cli.args.timeout, 1);
+        assert_eq!(cli.args.delay, 0); // default
+
+        assert_eq!(&cli.args.file, "filename.txt");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_wrong_values() {
+        let test_args =
+            self::create_iter_from_cmd("programm_name.exe --repeat TWICE http://error.local/");
+
+        Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
     }
 }

@@ -1,10 +1,17 @@
-use oxiflow::components::worker;
 use oxiflow::components::cli::Cli;
+use oxiflow::components::worker;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::new();
+    let cli = match Cli::from_os_env() {
+        Ok(instance) => instance,
+        Err(err) => {
+            err.print().expect("Unable to format error details");
+            return Err("Wrong arguments".into());
+        }
+    };
     cli.set_log_level();
+    // dbg!(&cli.args);
 
     if !worker::is_supported_method(&cli.args.method) {
         println!("Defined method is not supported '{}'", &cli.args.method);
