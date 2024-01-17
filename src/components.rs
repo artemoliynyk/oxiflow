@@ -3,3 +3,4 @@
 pub mod progressbar;
 pub mod worker;
 pub mod cli;
+pub mod report;

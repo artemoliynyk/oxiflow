@@ -9,9 +9,9 @@ use reqwest::{Client, ClientBuilder, RequestBuilder};
 
 use crate::components::worker;
 
-use super::{response::ClientResponse, error::ClientError};
+use super::{error::HttpError, response::HttpResponse};
 
-pub type ClientResult = std::result::Result<ClientResponse, ClientError>;
+pub type HttpResult = std::result::Result<HttpResponse, HttpError>;
 
 /// HTTP specific worker, used to call HTTP/HTTPS urls
 pub struct HttpClient {
@@ -74,13 +74,23 @@ impl HttpClient {
     }
 }
 
-pub async fn execute_request(request: RequestBuilder) -> ClientResult {
+pub async fn execute_request(request: RequestBuilder) -> HttpResult {
     let start = Instant::now();
+
+    // TODO: rewrite this abomination
+    let method = request
+        .try_clone()
+        .unwrap()
+        .build()
+        .unwrap()
+        .method()
+        .to_string();
+
     let response = request.send().await;
     let elapsed = start.elapsed().as_millis();
 
     match response {
-        Ok(res) => Ok(ClientResponse::new(res, elapsed)),
-        Err(err) => Err(ClientError::new(err, elapsed)),
+        Ok(res) => Ok(HttpResponse::new(res, method, elapsed)),
+        Err(err) => Err(HttpError::new(err, method, elapsed)),
     }
 }
