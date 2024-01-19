@@ -21,7 +21,6 @@ impl<'a> Report<'a> {
     }
 
     fn print_into(&self, title: &str) {
-        // let title = "Results";
         let filler_part = self.get_filler(title);
 
         println!("{} {} {}", filler_part, title, filler_part);
@@ -60,6 +59,10 @@ impl<'a> Report<'a> {
         self.print_into("Results");
         self.print_summary();
         self.print_per_code_result();
+
+        println!();
+        self.print_per_request();
+
         self.print_end();
     }
 
@@ -79,16 +82,9 @@ impl<'a> Report<'a> {
                 false => ("Failed".to_string(), "0".to_string()),
             };
             println!(
-                "{}\t{}\t{: >5} ms\t{}",
-                record.method,
-                record.url,
-                time,
-                code
+                "{: >7} ms {: >7} {} - {}",
+                time, record.method, record.url, code
             );
-            // println!("{}\t{}", code, time);
-            println!();
         }
-
-        self.print_end();
     }
 }

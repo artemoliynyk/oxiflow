@@ -36,6 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Concurren clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec",
         &cli.args.concurrent, &cli.args.repeat, &cli.args.timeout, &cli.args.delay
     );
+    println!();
 
     let result = worker::perform_requests(
         cli.args.method,
@@ -50,10 +51,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let report = report::Report::new(&result);
-    
+
     report.print_report();
-    println!();
-    report.print_per_request();
 
     Ok(())
 }
