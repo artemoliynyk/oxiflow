@@ -34,25 +34,26 @@ pub async fn perform_requests(
     delay: u8,
 ) -> Box<WorkerResult> {
     let mut result = Box::new(WorkerResult::new());
-    let mut handles: tokio::task::JoinSet<client::ClientResult> = tokio::task::JoinSet::new();
+    let mut handles: tokio::task::JoinSet<client::HttpResult> = tokio::task::JoinSet::new();
 
     let mut progress_bar = Oxibar::new(repeat as u32 * concurrent as u32);
 
-    let worker = client::HttpClient::new(timeout);
+    let http_client = client::HttpClient::new(timeout);
+
     for iteration in 0..repeat {
         if repeat > 1 {
             log::info!(target: "worker::request", "Pass #{}", iteration + 1);
         }
 
         for _ in 0..concurrent {
-            worker
+            http_client
                 .resolve_request(method.clone(), address.clone())
                 .map_or_else(
                     |_| {
                         log::info!("Wrong HTTP method - skip and count skipped");
 
                         log::error!("Error calling URL - wrong method: '{}'", method);
-                        result.inc_skipped();
+                        result.totals.inc_skipped();
                     },
                     |req| {
                         let future = client::execute_request(req);
@@ -68,11 +69,11 @@ pub async fn perform_requests(
 
             match res.unwrap() {
                 Ok(client_response) => {
-                    result.count_response(&client_response);
+                    result.success(&client_response);
                     log::info!(target: "worker::request", "Response: {}", client_response);
                 }
                 Err(client_error) => {
-                    result.inc_error();
+                    result.failure(&client_error);
                     log::info!(target: "worker::request", "Failed: {}", client_error);
                 }
             }

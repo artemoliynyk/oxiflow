@@ -15,6 +15,9 @@ pub struct Oxibar {
     /// progress bar width
     size: u32,
 
+    /// progress bar label
+    label: String,
+
     /// visual represntation of the empty progress barr cells (default: `-`)
     style_empty: String,
 
@@ -37,6 +40,7 @@ impl Default for Oxibar {
             total: 0,
             current: 0,
             size: _DEFAULT_WIDTH,
+            label: "Progress: ".to_string(),
             style_empty: "-".to_string(),
             style_filled: "=".to_string(),
             style_cursor: ">".to_string(),
@@ -48,7 +52,7 @@ impl Default for Oxibar {
 
 impl Oxibar {
     /// Create new progress bar for `total` items, starting current progress from 0.
-    /// 
+    ///
     /// This total number will represent 100% progress
     pub fn new(total: u32) -> Oxibar {
         Oxibar {
@@ -76,7 +80,7 @@ impl Oxibar {
     }
 
     /// Set characters to represent empty progress.
-    /// 
+    ///
     /// Example: if minus (-) char used – progress will look like this: `[--------]`
     pub fn set_style_empty(&mut self, style: &str) -> &mut Self {
         self.style_empty = style.to_string();
@@ -85,7 +89,7 @@ impl Oxibar {
     }
 
     /// Set characters to represent completed part of progress, filled bar.
-    /// 
+    ///
     /// Example: if equal (=) char used – progress will look like this: `[===>----]`
     pub fn set_style_filled(&mut self, style: &str) -> &mut Self {
         self.style_filled = style.to_string();
@@ -94,7 +98,7 @@ impl Oxibar {
     }
 
     /// Set characters to represent current position of progress.
-    /// 
+    ///
     /// Example: if plus (+) char used – progress will look like this: `[===+----]`
     pub fn set_style_cursor(&mut self, style: &str) -> &mut Self {
         self.style_cursor = style.to_string();
@@ -140,7 +144,7 @@ impl Oxibar {
         self
     }
     /// Increase number of processed items by defined value.
-    /// 
+    ///
     /// Useful for batch progress updating
     pub fn advance_multiple(&mut self, num: u32) -> &Self {
         self.current += num;
@@ -149,9 +153,9 @@ impl Oxibar {
     }
 
     /// Print current progress on the same line overwritting previous progress.
-    /// 
+    ///
     /// This methong use `\r` escape sequence, which is supported by the most terminal.
-    /// 
+    ///
     /// _Please note:_ printing anything between `print()` calls will result in broken output
     pub fn print(&self) {
         let (p_total, p_curr, percent) = self.calculate_values(self.total, self.current);
@@ -170,7 +174,10 @@ impl Oxibar {
         let c_remain = &self.style_empty.repeat(left as usize);
 
         let progress = format!("[{}{}{}] {}/100%", c_done, cursor, c_remain, percent);
-        print!("\r{} ({}/{})", progress, self.current, self.total);
+        print!(
+            "\r{}{} ({}/{})",
+            self.label, progress, self.current, self.total
+        );
         std::io::stdout().flush().unwrap();
 
         if p_total == p_curr {
