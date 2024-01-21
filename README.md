@@ -46,7 +46,7 @@ Planned features:
   - [ ] Pre-test actions (Auth)
 - [ ] Reporting component
   - [ ] Toggleable coloured output
-  - [ ] Per-URL requests report
+  - [X] Per-URL requests report
   - [ ] Report export (CSV, XML)
   - [ ] Visual reporting (plotting)
 - [ ] Additional HTTP fields support:
