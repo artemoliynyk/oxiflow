@@ -6,12 +6,16 @@ use std::{
 };
 
 use reqwest::{Client, ClientBuilder, RequestBuilder};
+use super::{error::HttpError, response::HttpResponse, HttpResult};
 
-use crate::components::worker;
+/// supported HTTP-methods, used for the command line args filtering
+pub const SUPPORTED_METHODS: [&str; 5] = ["GET", "POST", "DELETE", "PUT", "PATCH"];
 
-use super::{error::HttpError, response::HttpResponse};
+/// check if method arg passed from the command line is valid and supported
+pub fn is_supported_method(method: &str) -> bool {
+    SUPPORTED_METHODS.contains(&method.trim().to_uppercase().as_str())
+}
 
-pub type HttpResult = std::result::Result<HttpResponse, HttpError>;
 
 /// HTTP specific worker, used to call HTTP/HTTPS urls
 pub struct HttpClient {
@@ -57,7 +61,7 @@ impl HttpClient {
     ) -> Result<RequestBuilder, Box<dyn Error>> {
         let method_upper = method.trim().to_uppercase();
 
-        if !worker::is_supported_method(&method) {
+        if !is_supported_method(&method) {
             return Err(format!("Unsupported method: '{}'", &method).into());
         }
 

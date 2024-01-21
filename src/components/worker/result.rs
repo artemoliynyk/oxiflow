@@ -5,9 +5,9 @@
 
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 
-use self::{single::Single, totals::Totals};
+use crate::components::http::{error::HttpError, response::HttpResponse};
 
-use super::http::{error::HttpError, response::HttpResponse};
+use self::{single::Single, totals::Totals};
 
 mod single;
 mod totals;

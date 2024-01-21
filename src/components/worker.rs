@@ -1,29 +1,26 @@
 //! Worker – is a main "namespace" for all HTTP-related methods and implementation.
-//! 
+//!
 //! This mod hosts HTTP client, response, result and error.
-//! 
+//!
 //! See corresponding module docs for more details
 
-pub mod http;
 pub mod result;
 
 use std::{thread, time::Duration};
 
-use crate::components::{worker::http::client, progressbar::Oxibar};
+use crate::components::progressbar::Oxibar;
 use log;
 
 use self::result::WorkerResult;
 
-/// supported HTTP-methods, used for the command line args filtering
-/// TODO: move this into the HTTP component as Vector and use keys for filtering
-pub const SUPPORTED_METHODS: [&str; 5] = ["GET", "POST", "DELETE", "PUT", "PATCH"];
+use super::http::{HttpResult, client::HttpClient};
 
-/// Main method responsible for scheduling requests, waiting for them, recording the results and 
+/// Main method responsible for scheduling requests, waiting for them, recording the results and
 /// will show the progress or extra debug info.
-/// 
+///
 /// This method will check how many time to repeat, how many concurrent requests to perform,
 /// will perfor delay between repeats and will check the HTTP client reponse.
-/// 
+///
 /// All the responses will be checked and recorded in `WorkerResult` struct.
 pub async fn perform_requests(
     method: String,
@@ -34,11 +31,11 @@ pub async fn perform_requests(
     delay: u8,
 ) -> Box<WorkerResult> {
     let mut result = Box::new(WorkerResult::new());
-    let mut handles: tokio::task::JoinSet<client::HttpResult> = tokio::task::JoinSet::new();
+    let mut handles: tokio::task::JoinSet<HttpResult> = tokio::task::JoinSet::new();
 
     let mut progress_bar = Oxibar::new(repeat as u32 * concurrent as u32);
 
-    let http_client = client::HttpClient::new(timeout);
+    let http_client = HttpClient::new(timeout);
 
     for iteration in 0..repeat {
         if repeat > 1 {
@@ -56,7 +53,7 @@ pub async fn perform_requests(
                         result.totals.inc_skipped();
                     },
                     |req| {
-                        let future = client::execute_request(req);
+                        let future = super::http::client::execute_request(req);
                         handles.spawn(future);
                     },
                 );
@@ -87,9 +84,4 @@ pub async fn perform_requests(
     }
 
     result
-}
-
-/// check if method arg passed from the command line is valid and supported
-pub fn is_supported_method(method: &str) -> bool {
-    SUPPORTED_METHODS.contains(&method.trim().to_uppercase().as_str())
 }

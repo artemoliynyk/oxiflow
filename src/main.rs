@@ -3,6 +3,7 @@
 use oxiflow::components::cli::Cli;
 use oxiflow::components::report;
 use oxiflow::components::worker;
+use oxiflow::components::http;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,10 +16,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     cli.set_log_level();
 
-    if !worker::is_supported_method(&cli.args.method) {
+    if !http::client::is_supported_method(&cli.args.method) {
         println!(
             "Supported methods: {}",
-            worker::SUPPORTED_METHODS.join(", ")
+            http::client::SUPPORTED_METHODS.join(", ")
         );
 
         return Err(format!("Defined method is not supported '{}'", &cli.args.method).into());

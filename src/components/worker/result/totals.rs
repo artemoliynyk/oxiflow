@@ -1,4 +1,4 @@
-use crate::components::worker::http::response::HttpResponse;
+use crate::components::http::response::HttpResponse;
 
 /// Struct to count response number and average response time (ms) by code.
 ///
