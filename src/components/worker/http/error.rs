@@ -10,9 +10,6 @@ pub struct HttpError {
 
     // error message
     error: String,
-    
-    // TODO: remove this, we have Option<T> below
-    is_timeout: bool,
 
     /// if error happened due to the timeout – this field will hold the time (ms)
     timeout: Option<u128>,
@@ -30,7 +27,6 @@ impl HttpError {
             url: err.url().unwrap().to_string(),
             method,
             error: err.to_string(),
-            is_timeout: err.is_timeout(),
             timeout: timeout_info,
         }
     }
@@ -40,14 +36,11 @@ impl std::fmt::Display for HttpError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Error: {}, Timeout - {}{}",
+            "Error: {}, Timeout - {}",
             self.error,
-            self.is_timeout,
-            if self.is_timeout {
-                format!(", {} (ms)", self.timeout.unwrap())
-            } else {
-                "".to_string()
-            }
+            self.timeout.map_or("No".to_string(), |time_ms| {
+                format!(", {} (ms)", time_ms)
+            })
         )
     }
 }
