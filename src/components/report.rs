@@ -9,7 +9,7 @@ pub struct Report<'a> {
 impl<'a> Report<'a> {
     const REPORT_WIDTH: usize = 61;
 
-    pub fn new(result: &WorkerResult) -> Report {
+    pub fn new(result: &WorkerResult) -> Report<'_> {
         Report {
             worker_result: result,
         }

@@ -1,6 +1,7 @@
 //! Error HTTP client representation
 
-#[derive(Default)]
+use std::time::Instant;
+
 pub struct HttpError {
     /// request URL
     pub url: String,
@@ -13,11 +14,26 @@ pub struct HttpError {
 
     /// if error happened due to the timeout – this field will hold the time (ms)
     timeout: Option<u128>,
+
+    /// request start time
+    pub time: Instant,
+}
+
+impl Default for HttpError {
+    fn default() -> Self {
+        Self {
+            url: Default::default(),
+            method: Default::default(),
+            error: Default::default(),
+            timeout: Default::default(),
+            time: Instant::now(),
+        }
+    }
 }
 
 impl HttpError {
     /// Create new Error and resolve timeout from elapsed time if it happened
-    pub fn new(err: reqwest::Error, method: String, elapsed: u128) -> HttpError {
+    pub fn new(err: reqwest::Error, method: String, elapsed: u128, time: Instant) -> HttpError {
         let timeout_info = match err.is_timeout() {
             true => Some(elapsed),
             false => None,
@@ -28,6 +44,7 @@ impl HttpError {
             method,
             error: err.to_string(),
             timeout: timeout_info,
+            time
         }
     }
 }

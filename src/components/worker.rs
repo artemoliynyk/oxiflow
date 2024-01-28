@@ -13,7 +13,7 @@ use log;
 
 use self::result::WorkerResult;
 
-use super::http::{HttpResult, client::HttpClient};
+use super::http::{client::HttpClient, HttpResult};
 
 /// Main method responsible for scheduling requests, waiting for them, recording the results and
 /// will show the progress or extra debug info.
@@ -23,9 +23,9 @@ use super::http::{HttpResult, client::HttpClient};
 ///
 /// All the responses will be checked and recorded in `WorkerResult` struct.
 pub async fn perform_requests(
+    http_client: &'static HttpClient,
     method: String,
     address: String,
-    timeout: u8,
     concurrent: u8,
     repeat: u8,
     delay: u8,
@@ -34,8 +34,6 @@ pub async fn perform_requests(
     let mut handles: tokio::task::JoinSet<HttpResult> = tokio::task::JoinSet::new();
 
     let mut progress_bar = Oxibar::new(repeat as u32 * concurrent as u32);
-
-    let http_client = HttpClient::new(timeout);
 
     for iteration in 0..repeat {
         if repeat > 1 {
@@ -53,7 +51,7 @@ pub async fn perform_requests(
                         result.totals.inc_skipped();
                     },
                     |req| {
-                        let future = super::http::client::execute_request(req);
+                        let future = http_client.execute_request(req);
                         handles.spawn(future);
                     },
                 );
