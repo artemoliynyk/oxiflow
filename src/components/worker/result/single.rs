@@ -1,5 +1,7 @@
 //! This stcut represents result for a single request
 
+// TODO: add request start time
+
 #[derive(Default)]
 pub struct Single {
     pub success: bool,

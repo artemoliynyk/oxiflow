@@ -5,13 +5,16 @@ use std::{
     time::{Duration, Instant},
 };
 
-use reqwest::{Client, ClientBuilder, RequestBuilder};
+use super::{error::HttpError, response::HttpResponse, HttpResult};
+use reqwest::{Client, ClientBuilder, Request, RequestBuilder};
 
-use crate::components::worker;
+/// supported HTTP-methods, used for the command line args filtering
+pub const SUPPORTED_METHODS: [&str; 5] = ["GET", "POST", "DELETE", "PUT", "PATCH"];
 
-use super::{error::HttpError, response::HttpResponse};
-
-pub type HttpResult = std::result::Result<HttpResponse, HttpError>;
+/// check if method arg passed from the command line is valid and supported
+pub fn is_supported_method(method: &str) -> bool {
+    SUPPORTED_METHODS.contains(&method.trim().to_uppercase().as_str())
+}
 
 /// HTTP specific worker, used to call HTTP/HTTPS urls
 pub struct HttpClient {
@@ -50,14 +53,10 @@ impl HttpClient {
         self.client.delete(url)
     }
 
-    pub fn resolve_request(
-        &self,
-        method: String,
-        url: String,
-    ) -> Result<RequestBuilder, Box<dyn Error>> {
+    pub fn resolve_request(&self, method: String, url: String) -> Result<Request, Box<dyn Error>> {
         let method_upper = method.trim().to_uppercase();
 
-        if !worker::is_supported_method(&method) {
+        if !is_supported_method(&method) {
             return Err(format!("Unsupported method: '{}'", &method).into());
         }
 
@@ -70,27 +69,19 @@ impl HttpClient {
             _ => panic!("Unmatched method found, previous checks failed. This is a bug!"),
         };
 
-        Ok(req)
+        Ok(req.build().unwrap())
     }
-}
 
-pub async fn execute_request(request: RequestBuilder) -> HttpResult {
-    let start = Instant::now();
+    pub async fn execute_request(&self, request: Request) -> HttpResult {
+        let start = Instant::now();
+        let method = request.method().to_string();
 
-    // TODO: rewrite this abomination
-    let method = request
-        .try_clone()
-        .unwrap()
-        .build()
-        .unwrap()
-        .method()
-        .to_string();
+        let response = self.client.execute(request).await;
+        let elapsed = start.elapsed().as_millis();
 
-    let response = request.send().await;
-    let elapsed = start.elapsed().as_millis();
-
-    match response {
-        Ok(res) => Ok(HttpResponse::new(res, method, elapsed)),
-        Err(err) => Err(HttpError::new(err, method, elapsed)),
+        match response {
+            Ok(res) => Ok(HttpResponse::new(res, method, elapsed, start)),
+            Err(err) => Err(HttpError::new(err, method, elapsed, start)),
+        }
     }
 }

@@ -66,9 +66,7 @@ impl Cli {
     /// Create a Cli instance with all th eargs
     pub fn new(args: IntoIter<OsString>) -> Result<Cli, clap::error::Error> {
         Args::try_parse_from(args).map_or_else(
-            |err: clap::error::Error| {
-                Err(err)
-            },
+            |err: clap::error::Error| Err(err),
             |parsed_args| Ok(Cli { args: parsed_args }),
         )
     }
