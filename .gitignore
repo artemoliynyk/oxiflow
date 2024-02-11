@@ -20,3 +20,5 @@ Cargo.lock
 *.pdb
 
 tmp*.txt
+
+node_modules
