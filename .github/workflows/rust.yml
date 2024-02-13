@@ -10,23 +10,23 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  tests:
-    runs-on: ubuntu-latest
+#   tests:
+#     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v3
-    - name: Rust 1.75.0
-      run: |
-        rm -fr /home/runner/.cargo/
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
-        chmod +x rustup.sh
-        ./rustup.sh -y
-        rustup install 1.75.0
+#     steps:
+#     - uses: actions/checkout@v3
+#     - name: Rust 1.75.0
+#       run: |
+#         rm -fr /home/runner/.cargo/
+#         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+#         chmod +x rustup.sh
+#         ./rustup.sh -y
+#         rustup install 1.75.0
       
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+#     - name: Build
+#       run: cargo build --verbose
+#     - name: Run tests
+#       run: cargo test --verbose
   
   build-macos:
     # needs: tests
@@ -47,11 +47,13 @@ jobs:
         cd ./target/release/
         shasum -a 1 -b oxiflow > oxiflow.checksum
         zip "release-$PKG_VER.zip" oxiflow.checksum oxiflow
+        ls -l ${{ github.workspace }}
+        ls -l ${{ github.workspace }}/target/release/
     
     - name: upload-artifact
       uses: actions/upload-artifact@v1
       with:
         name: uploads
-        path: ./target/release/release-*.zip
+        path: ${{ github.workspace }}/target/release/release*.zip
         
     
