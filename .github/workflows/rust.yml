@@ -29,7 +29,7 @@ jobs:
       run: cargo test --verbose
   
   build-macos:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
     - name: prepare rust 1.75
