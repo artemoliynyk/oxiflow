@@ -28,10 +28,12 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
   
-  build-macos-:
+  build-macos:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: prepare rust 1.75
       run: |
-        ls -l
+        uname -a
+        brew --version
+        cargo --version
