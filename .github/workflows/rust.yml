@@ -29,11 +29,18 @@ jobs:
       run: cargo test --verbose
   
   build-macos:
+    # needs: tests
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
     - name: prepare rust 1.75
       run: |
-        uname -a
-        brew --version
-        cargo --version
+        rustup install 1.75.0
+        rustup default 1.75.0
+
+    - uses: actions/checkout@v3
+    - name: build-release
+      run: |
+        cargo build --release
+        cd ./target/release/
+        shasum -a 256 -b oxiflow
+    
