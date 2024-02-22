@@ -32,10 +32,10 @@ jobs:
     # needs: tests
     runs-on: macos-latest
     steps:
-    - name: prepare rust 1.75
-      run: |
-        rustup install 1.75.0
-        rustup default 1.75.0
+    # - name: prepare rust 1.75
+    #   run: |
+    #     rustup install 1.75.0
+    #     rustup default 1.75.0
 
     - uses: actions/checkout@v3
     - name: build-release
@@ -50,13 +50,14 @@ jobs:
         # shasum -a 1 -b oxiflow > oxiflow.checksum
         # zip "release-$PKG_VER.zip" oxiflow.checksum oxiflow
         touch "release-$PKG_VER.zip"
-        ls -l ${{ github.workspace }}
+
+        ls -l "${{ github.workspace }}/target/release/release-*.zip"
         # ls -l ${{ github.workspace }}/target/release/
     
     - name: upload-artifact
       uses: actions/upload-artifact@v4
       with:
         name: releases
-        path: ${{ github.workspace }}/target/release/release-*.zip
+        path: "${{ github.workspace }}/target/release/release-*.zip"
         
     
