@@ -44,12 +44,12 @@ jobs:
 
         # change permission and pack it all
         chmod +x oxiflow
-        tar -cvf "release-${PKG_VER}.tar" oxiflow oxiflow.checksum VERSION
+        tar -cvf "oxiflow-${PKG_VER}.tar" oxiflow oxiflow.checksum VERSION
     
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: release-${{ env.PKG_VER }}-mac-x86_64
-        path: "${{ github.workspace }}/target/release/release-${{ env.PKG_VER }}.tar"
+        name: oxiflow-${{ env.PKG_VER }}-mac-x86_64
+        path: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
         overwrite: true
         
