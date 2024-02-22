@@ -49,7 +49,7 @@ jobs:
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: release-${{ env.PKG_VER }}
+        name: release-${{ env.PKG_VER }}-mac-x86_64
         path: "${{ github.workspace }}/target/release/release-${{ env.PKG_VER }}.tar"
         overwrite: true
         
