@@ -46,15 +46,15 @@ jobs:
       run: |
         # PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2` 
         PKG_VER="0.1.3"
-        mkdir -p ./target/release/
+        mkdir -p "${{ github.workspace }}/target/release/"
         
-        cd ./target/release/
+        cd "${{ github.workspace }}/target/release/"
         # shasum -a 1 -b oxiflow > oxiflow.checksum
         # zip "release-$PKG_VER.zip" oxiflow.checksum oxiflow
         touch "release-$PKG_VER.zip"
 
-        ls -l "${{ github.workspace }}/target/release/release*.zip"
-        # ls -l ${{ github.workspace }}/target/release/
+        # ls -l "${{ github.workspace }}/target/release/release*.zip"
+        ls -l ${{ github.workspace }}/target/release/
     
     - name: upload-artifact
       uses: actions/upload-artifact@v4
