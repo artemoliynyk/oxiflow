@@ -19,28 +19,34 @@ jobs:
         rustup default 1.75.0
 
     - uses: actions/checkout@v3
-    - name: rest-release
-      run: cargo test --verbose
+    - name: test-release
+      run: cargo test --release --verbose
 
     - name: build-release
       run: cargo build --release
 
     - name: prepare-artifacts
       run: |
+        # save version
         PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
         echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
-        
-        cd "${{ github.workspace }}/target/release/"
-        shasum -a 1 -b oxiflow > oxiflow.checksum
 
+        # go to release folder and create final folder
+        cd "${{ github.workspace }}/target/release/"
         mkdir -p artifacts
+
+        # save version and checksum files
         echo $PKG_VER > ./artifacts/VERSION
+        shasum -a 1 -b oxiflow > ./artifacts/oxiflow.checksum
+
+        # change permission and move binary
+        chmod +x oxiflow
         mv oxiflow ./artifacts
-        mv oxiflow.checksum ./artifacts
     
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
       with:
         name: release-${{ env.PKG_VER }}
         path: "${{ github.workspace }}/target/release/artifacts/*"
+        overwrite: true
         
