@@ -33,15 +33,14 @@ jobs:
 
         # go to release folder and create final folder
         cd "${{ github.workspace }}/target/release/"
-        mkdir -p artifacts
 
         # save version and checksum files
-        echo $PKG_VER > ./artifacts/VERSION
-        shasum -a 1 -b oxiflow > ./artifacts/oxiflow.checksum
+        echo $PKG_VER > VERSION
+        shasum -a 1 -b oxiflow > oxiflow.checksum
 
-        # change permission and move binary
+        # change permission and pack it all
         chmod +x oxiflow
-        mv oxiflow ./artifacts
+        tar -cvf ./artifacts.tar oxiflow oxiflow.checksum VERSION
     
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
