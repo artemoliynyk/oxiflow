@@ -51,13 +51,13 @@ jobs:
         # zip "release-$PKG_VER.zip" oxiflow.checksum oxiflow
         touch "release-$PKG_VER.zip"
 
-        ls -l "${{ github.workspace }}/target/release/release-*.zip"
+        ls -l "${{ github.workspace }}/target/release/release*.zip"
         # ls -l ${{ github.workspace }}/target/release/
     
     - name: upload-artifact
       uses: actions/upload-artifact@v4
       with:
         name: releases
-        path: "${{ github.workspace }}/target/release/release-*.zip"
+        path: "${{ github.workspace }}/target/release/release*.zip"
         
     
