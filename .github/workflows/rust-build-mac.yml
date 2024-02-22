@@ -1,11 +1,15 @@
-name: Rust
+name: Rust release build MacOS x86_64
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+  #   branches:
+  #     - main
+  #   tags:
+  #     - release*
+    
 env:
   CARGO_TERM_COLOR: always
 
@@ -40,12 +44,12 @@ jobs:
 
         # change permission and pack it all
         chmod +x oxiflow
-        tar -cvf ./artifacts.tar oxiflow oxiflow.checksum VERSION
+        tar -cvf "release-${PKG_VER}.tar" oxiflow oxiflow.checksum VERSION
     
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
       with:
         name: release-${{ env.PKG_VER }}
-        path: "${{ github.workspace }}/target/release/artifacts.tar"
+        path: "${{ github.workspace }}/target/release/release-${{ env.PKG_VER }}.tar"
         overwrite: true
         
