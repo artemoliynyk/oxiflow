@@ -24,3 +24,10 @@ export function checkTerminationParam(req: Request, res: Response, next: NextFun
     // no termination, proceed with routes
     next()
 }
+
+export function randomCode(): number {
+    const codeHi = Math.round(Math.random() * (5 - 1) + 1);
+    const codeLo = Math.round(Math.random() * 4);
+
+    return codeHi * 100 + codeLo;
+}
