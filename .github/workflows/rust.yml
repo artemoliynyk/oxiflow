@@ -44,12 +44,14 @@ jobs:
 
     - name: build-release
       run: |
-        PKG_VER="0.1.3"
         # PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2` 
-        # cd ./target/release/
+        PKG_VER="0.1.3"
+        mkdir -p ./target/release/
+        
+        cd ./target/release/
         # shasum -a 1 -b oxiflow > oxiflow.checksum
         # zip "release-$PKG_VER.zip" oxiflow.checksum oxiflow
-        touch "release-$PKG_VER.zip"
+        touch "./target/release/release-$PKG_VER.zip"
 
         ls -l "${{ github.workspace }}/target/release/release*.zip"
         # ls -l ${{ github.workspace }}/target/release/
