@@ -51,7 +51,7 @@ jobs:
         cd ./target/release/
         # shasum -a 1 -b oxiflow > oxiflow.checksum
         # zip "release-$PKG_VER.zip" oxiflow.checksum oxiflow
-        touch "./target/release/release-$PKG_VER.zip"
+        touch "release-$PKG_VER.zip"
 
         ls -l "${{ github.workspace }}/target/release/release*.zip"
         # ls -l ${{ github.workspace }}/target/release/
