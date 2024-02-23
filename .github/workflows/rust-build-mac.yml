@@ -1,11 +1,12 @@
-name: Rust
+name: Rust release build MacOS x86_64
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+    branches:
+      - main
+    tags:
+      - release*
+    
 env:
   CARGO_TERM_COLOR: always
 
@@ -19,28 +20,33 @@ jobs:
         rustup default 1.75.0
 
     - uses: actions/checkout@v3
-    - name: rest-release
-      run: cargo test --verbose
+    - name: test-release
+      run: cargo test --release --verbose
 
     - name: build-release
       run: cargo build --release
 
     - name: prepare-artifacts
       run: |
+        # save version
         PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
         echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
-        
+
+        # go to release folder
         cd "${{ github.workspace }}/target/release/"
+
+        # save version and checksum files
+        echo $PKG_VER > VERSION
         shasum -a 1 -b oxiflow > oxiflow.checksum
 
-        mkdir -p artifacts
-        echo $PKG_VER > ./artifacts/VERSION
-        mv oxiflow ./artifacts
-        mv oxiflow.checksum ./artifacts
+        # change permission and pack it all
+        chmod +x oxiflow
+        tar -cvf "oxiflow-${PKG_VER}.tar" oxiflow oxiflow.checksum VERSION
     
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: release-${{ env.PKG_VER }}
-        path: "${{ github.workspace }}/target/release/artifacts/*"
+        name: oxiflow-${{ env.PKG_VER }}-mac-x86_64
+        path: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
+        overwrite: true
         
