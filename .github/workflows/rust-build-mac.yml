@@ -3,7 +3,7 @@ name: Rust release build MacOS x86_64
 on:
   push:
     tags:
-      - 'release-*'
+      - *
     
 env:
   CARGO_TERM_COLOR: always
