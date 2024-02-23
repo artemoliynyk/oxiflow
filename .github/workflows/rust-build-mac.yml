@@ -2,10 +2,10 @@ name: Rust release build MacOS x86_64
 
 on:
   push:
-    branches:
-      - main
     tags:
-      - release-*
+      - 'release-*'
+    branches:
+      - '**'
     
 env:
   CARGO_TERM_COLOR: always
