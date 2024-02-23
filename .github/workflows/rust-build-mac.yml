@@ -1,19 +1,17 @@
 name: Rust release build MacOS x86_64
 
 on:
-  create:
-  # push:
-  #   tags:
-  #     - 'release-*'
-  #   branches:
-  #     - '**'
+  push:
+    tags:
+      - 'release-*'
+    branches:
+      - '**'
     
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build-macos:
-    if: ${{ startsWith(github.ref, 'refs/tags/release') }}
     runs-on: macos-latest
     steps:
     - name: prepare rust 1.75
