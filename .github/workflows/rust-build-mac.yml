@@ -2,13 +2,10 @@ name: Rust release build MacOS x86_64
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  #   branches:
-  #     - main
-  #   tags:
-  #     - release*
+    branches:
+      - main
+    tags:
+      - release*
     
 env:
   CARGO_TERM_COLOR: always
@@ -35,7 +32,7 @@ jobs:
         PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
         echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
 
-        # go to release folder and create final folder
+        # go to release folder
         cd "${{ github.workspace }}/target/release/"
 
         # save version and checksum files
