@@ -1,6 +1,6 @@
 [package]
 name = "oxiflow"
-version = "0.1.3"
+version = "0.8.1"
 edition = "2021"
 description = "Minimal HTTP loadtester with concurrency"
 license = "GPL-3.0"
