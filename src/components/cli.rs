@@ -1,8 +1,16 @@
 //! Helper class to build CLI args parser
+
+#![allow(clippy::print_stderr, clippy::print_stdout)]
 use std::{ffi::OsString, vec::IntoIter};
 
 use clap::{ArgAction, Parser};
 use env_logger::Builder as log_builder;
+
+use crate::{method_supported, SUPPORTED_HTTP_METHODS};
+
+const EXIT_ERROR_PARSING_ARGS: u8 = 3;
+const EXIT_UNKNOWN_METHOD: u8 = 4;
+const EXIT_NOT_SUPPORTED_YET: u8 = 5;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -57,6 +65,46 @@ pub struct Cli {
 }
 
 impl Cli {
+    pub fn create() -> Result<Cli, u8> {
+        let cli = match Cli::from_os_env() {
+            Ok(instance) => instance,
+            Err(err) => {
+                err.print().expect("Unable to format error details");
+                return Err(EXIT_ERROR_PARSING_ARGS);
+            }
+        };
+        cli.set_log_level();
+    
+        if !method_supported(&cli.args.method) {
+            println!("Defined method is not supported '{}'", &cli.args.method);
+            println!(
+                "Supported methods: {}",
+                SUPPORTED_HTTP_METHODS.join(", ")
+            );
+    
+    
+            return Err(EXIT_UNKNOWN_METHOD);
+        }
+    
+        if cli.args.repeat > 0 && cli.args.delay >= 30 {
+            println!(
+                "Warning: delay is set to {}s, it seems unreasonably high\n",
+                &cli.args.delay
+            );
+        }
+    
+        if !cli.args.file.is_empty() {
+            println!(
+                "File option is not supported yet, ignoring '{}'",
+                cli.args.file
+            );
+    
+            return Err(EXIT_NOT_SUPPORTED_YET);
+        }
+    
+        Ok(cli)
+    }
+
     pub fn from_os_env() -> Result<Cli, clap::error::Error> {
         let args_collection: Vec<OsString> = std::env::args_os().collect();
 

@@ -5,16 +5,10 @@ use std::{
     time::{Duration, Instant},
 };
 
+use crate::method_supported;
+
 use super::{error::HttpError, response::HttpResponse, HttpResult};
 use reqwest::{Client, ClientBuilder, Request, RequestBuilder};
-
-/// supported HTTP-methods, used for the command line args filtering
-pub const SUPPORTED_METHODS: [&str; 5] = ["GET", "POST", "DELETE", "PUT", "PATCH"];
-
-/// check if method arg passed from the command line is valid and supported
-pub fn is_supported_method(method: &str) -> bool {
-    SUPPORTED_METHODS.contains(&method.trim().to_uppercase().as_str())
-}
 
 /// HTTP specific worker, used to call HTTP/HTTPS urls
 pub struct HttpClient {
@@ -56,7 +50,7 @@ impl HttpClient {
     pub fn resolve_request(&self, method: String, url: String) -> Result<Request, Box<dyn Error>> {
         let method_upper = method.trim().to_uppercase();
 
-        if !is_supported_method(&method) {
+        if !method_supported(&method) {
             return Err(format!("Unsupported method: '{}'", &method).into());
         }
 
