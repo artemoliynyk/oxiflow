@@ -6,7 +6,7 @@ use std::{ffi::OsString, vec::IntoIter};
 use clap::{ArgAction, Parser};
 use env_logger::Builder as log_builder;
 
-use crate::{list_methods, method_supported};
+use crate::components::http;
 
 const EXIT_ERROR_PARSING_ARGS: u8 = 3;
 const EXIT_UNKNOWN_METHOD: u8 = 4;
@@ -75,9 +75,9 @@ impl Cli {
         };
         cli.set_log_level();
 
-        if !method_supported(&cli.args.method) {
+        if !http::method_supported(&cli.args.method) {
             println!("Defined method is not supported '{}'", &cli.args.method);
-            println!("Supported methods: {}", list_methods());
+            println!("Supported methods: {}", http::list_methods());
 
             return Err(EXIT_UNKNOWN_METHOD);
         }

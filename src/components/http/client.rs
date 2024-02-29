@@ -5,12 +5,13 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{components::worker::request::WorkerRequest, method_supported};
+use crate::components::http;
+use crate::components::worker::request::WorkerRequest;
 
-use super::{error::HttpError, response::HttpResponse, HttpResult};
+use crate::components::http::{error::HttpError, response::HttpResponse, HttpResult};
 use reqwest::{Client, ClientBuilder, Request, RequestBuilder};
 
-/// HTTP specific worker, used to call HTTP/HTTPS urls
+/// HTTP specific worker, used to call HTTP/HTTPS urlsØ
 pub struct HttpClient {
     client: Client,
 }
@@ -48,7 +49,7 @@ impl HttpClient {
     }
 
     pub fn resolve_request(&self, req: &WorkerRequest) -> Result<Request, Box<dyn Error>> {
-        if !method_supported(&req.method) {
+        if !http::method_supported(&req.method) {
             return Err(format!("Unsupported method: '{}'", &req.method).into());
         }
 

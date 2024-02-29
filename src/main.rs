@@ -36,7 +36,7 @@ fn main() -> ExitCode {
     let result: Box<WorkerResult> = rt.block_on(async {
         let request = WorkerRequest::new(cli.args.method, cli.args.address);
         worker
-            .perform_requests(request)
+            .perform_requests(vec![request])
             .await
     });
     println!();
