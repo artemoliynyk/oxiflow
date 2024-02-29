@@ -4,6 +4,7 @@
 //!
 //! See corresponding module docs for more details
 
+pub mod request;
 pub mod result;
 
 use std::{thread, time::Duration};
@@ -11,7 +12,7 @@ use std::{thread, time::Duration};
 use crate::components::progressbar::Oxibar;
 use log;
 
-use self::result::WorkerResult;
+use self::{request::WorkerRequest, result::WorkerResult};
 
 use super::http::{client::HttpClient, HttpResult};
 
@@ -39,7 +40,7 @@ impl Worker {
     /// will perfor delay between repeats and will check the HTTP client reponse.
     ///
     /// All the responses will be checked and recorded in `WorkerResult` struct.
-    pub async fn perform_requests(&self, method: String, address: String) -> Box<WorkerResult> {
+    pub async fn perform_requests(&self, request: WorkerRequest) -> Box<WorkerResult> {
         let mut result = Box::new(WorkerResult::new());
         let mut handles: tokio::task::JoinSet<HttpResult> = tokio::task::JoinSet::new();
 
@@ -52,12 +53,12 @@ impl Worker {
 
             for _ in 0..self.concurrent {
                 self.http_client
-                    .resolve_request(method.clone(), address.clone())
+                    .resolve_request(&request)
                     .map_or_else(
                         |_| {
                             log::info!("Wrong HTTP method - skip and count skipped");
 
-                            log::error!("Error calling URL - wrong method: '{}'", method);
+                            log::error!("Error calling URL - wrong method: '{}'", request.method);
                             result.totals.inc_skipped();
                         },
                         |req| {

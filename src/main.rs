@@ -5,6 +5,7 @@ use std::process::ExitCode;
 use oxiflow::components::cli::Cli;
 use oxiflow::components::http::client::HttpClient;
 use oxiflow::components::report;
+use oxiflow::components::worker::request::WorkerRequest;
 use oxiflow::components::worker::result::WorkerResult;
 use oxiflow::components::worker::Worker;
 
@@ -33,8 +34,9 @@ fn main() -> ExitCode {
     // aync runtime
     let rt = tokio::runtime::Runtime::new().unwrap();
     let result: Box<WorkerResult> = rt.block_on(async {
+        let request = WorkerRequest::new(cli.args.method, cli.args.address);
         worker
-            .perform_requests(cli.args.method, cli.args.address)
+            .perform_requests(request)
             .await
     });
     println!();
