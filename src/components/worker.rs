@@ -4,6 +4,7 @@
 //!
 //! See corresponding module docs for more details
 
+pub mod request;
 pub mod result;
 
 use std::{thread, time::Duration};
@@ -11,9 +12,9 @@ use std::{thread, time::Duration};
 use crate::components::progressbar::Oxibar;
 use log;
 
-use self::result::WorkerResult;
+use self::{request::WorkerRequest, result::WorkerResult};
 
-use super::http::{client::HttpClient, HttpResult};
+use crate::components::http::{client::HttpClient, HttpResult};
 
 pub struct Worker {
     http_client: &'static HttpClient,
@@ -39,7 +40,13 @@ impl Worker {
     /// will perfor delay between repeats and will check the HTTP client reponse.
     ///
     /// All the responses will be checked and recorded in `WorkerResult` struct.
-    pub async fn perform_requests(&self, method: String, address: String) -> Box<WorkerResult> {
+    pub async fn perform_requests(&self, requests: Vec<WorkerRequest>) -> Box<WorkerResult> {
+        if requests.len() > 1 {
+            panic!("Multiple URL are not supported yet!")
+        }
+
+        let request = requests.first().unwrap();
+
         let mut result = Box::new(WorkerResult::new());
         let mut handles: tokio::task::JoinSet<HttpResult> = tokio::task::JoinSet::new();
 
@@ -51,20 +58,18 @@ impl Worker {
             }
 
             for _ in 0..self.concurrent {
-                self.http_client
-                    .resolve_request(method.clone(), address.clone())
-                    .map_or_else(
-                        |_| {
-                            log::info!("Wrong HTTP method - skip and count skipped");
+                self.http_client.resolve_request(request).map_or_else(
+                    |_| {
+                        log::info!("Wrong HTTP method - skip and count skipped");
 
-                            log::error!("Error calling URL - wrong method: '{}'", method);
-                            result.totals.inc_skipped();
-                        },
-                        |req| {
-                            let future = self.http_client.execute_request(req);
-                            handles.spawn(future);
-                        },
-                    );
+                        log::error!("Error calling URL - wrong method: '{}'", request.method);
+                        result.totals.inc_skipped();
+                    },
+                    |req| {
+                        let future = self.http_client.execute_request(req);
+                        handles.spawn(future);
+                    },
+                );
             }
 
             while let Some(res) = handles.join_next().await {

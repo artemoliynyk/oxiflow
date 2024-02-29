@@ -5,12 +5,13 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::method_supported;
+use crate::components::http;
+use crate::components::worker::request::WorkerRequest;
 
-use super::{error::HttpError, response::HttpResponse, HttpResult};
+use crate::components::http::{error::HttpError, response::HttpResponse, HttpResult};
 use reqwest::{Client, ClientBuilder, Request, RequestBuilder};
 
-/// HTTP specific worker, used to call HTTP/HTTPS urls
+/// HTTP specific worker, used to call HTTP/HTTPS urlsØ
 pub struct HttpClient {
     client: Client,
 }
@@ -47,14 +48,13 @@ impl HttpClient {
         self.client.delete(url)
     }
 
-    pub fn resolve_request(&self, method: String, url: String) -> Result<Request, Box<dyn Error>> {
-        let method_upper = method.trim().to_uppercase();
-
-        if !method_supported(&method) {
-            return Err(format!("Unsupported method: '{}'", &method).into());
+    pub fn resolve_request(&self, req: &WorkerRequest) -> Result<Request, Box<dyn Error>> {
+        if !http::method_supported(&req.method) {
+            return Err(format!("Unsupported method: '{}'", &req.method).into());
         }
 
-        let req = match method_upper.as_str() {
+        let url = req.address.clone();
+        let req = match req.method.trim().to_uppercase().as_str() {
             "GET" => self.get(url),
             "POST" => self.post(url),
             "PUT" => self.put(url),

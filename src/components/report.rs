@@ -1,7 +1,7 @@
 //! Report component. Printing, exporting and summarising session results
 #![allow(clippy::print_stderr, clippy::print_stdout)]
+use crate::components::worker::result::WorkerResult;
 
-use super::worker::result::WorkerResult;
 pub struct Report<'a> {
     worker_result: &'a WorkerResult,
 }
