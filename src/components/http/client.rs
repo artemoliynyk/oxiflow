@@ -53,7 +53,7 @@ impl HttpClient {
             return Err(format!("Unsupported method: '{}'", &req.method).into());
         }
 
-        let url = req.address.clone();
+        let url = req.url.clone();
         let req = match req.method.trim().to_uppercase().as_str() {
             "GET" => self.get(url),
             "POST" => self.post(url),

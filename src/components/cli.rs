@@ -8,10 +8,6 @@ use env_logger::Builder as log_builder;
 
 use crate::components::http;
 
-const EXIT_ERROR_PARSING_ARGS: u8 = 3;
-const EXIT_UNKNOWN_METHOD: u8 = 4;
-const EXIT_NOT_SUPPORTED_YET: u8 = 5;
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 /// Simple, fast, concurrent load tester with minimal reporting
@@ -22,14 +18,14 @@ pub struct Args {
         required_unless_present("file"),
         default_value = ""
     )]
-    pub address: String,
+    pub url: String,
 
     /// config file with URLs definition to call
     #[arg(
         long,
         short('f'),
-        conflicts_with("address"),
-        required_unless_present("address"),
+        conflicts_with("url"),
+        required_unless_present("url"),
         default_value = ""
     )]
     pub file: String,
@@ -70,7 +66,7 @@ impl Cli {
             Ok(instance) => instance,
             Err(err) => {
                 err.print().expect("Unable to format error details");
-                return Err(EXIT_ERROR_PARSING_ARGS);
+                return Err(crate::EXIT_ERROR_PARSING_ARGS);
             }
         };
         cli.set_log_level();
@@ -79,7 +75,7 @@ impl Cli {
             println!("Defined method is not supported '{}'", &cli.args.method);
             println!("Supported methods: {}", http::list_methods());
 
-            return Err(EXIT_UNKNOWN_METHOD);
+            return Err(crate::EXIT_UNKNOWN_METHOD);
         }
 
         if cli.args.repeat > 0 && cli.args.delay >= 30 {
@@ -87,15 +83,6 @@ impl Cli {
                 "Warning: delay is set to {}s, it seems unreasonably high\n",
                 &cli.args.delay
             );
-        }
-
-        if !cli.args.file.is_empty() {
-            println!(
-                "File option is not supported yet, ignoring '{}'",
-                cli.args.file
-            );
-
-            return Err(EXIT_NOT_SUPPORTED_YET);
         }
 
         Ok(cli)
@@ -143,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn test_long_address() {
+    fn test_long_url() {
         let test_args = self::create_iter_from_cmd(
             "programm_name.exe -vvv --method TEST123 --concurrent 2 --repeat 3 --timeout 4 \
             --delay 5 http://address.local/long-test",
@@ -158,11 +145,11 @@ mod tests {
         assert_eq!(cli.args.timeout, 4);
         assert_eq!(cli.args.delay, 5);
 
-        assert_eq!(&cli.args.address, "http://address.local/long-test");
+        assert_eq!(&cli.args.url, "http://address.local/long-test");
     }
 
     #[test]
-    fn test_short_address() {
+    fn test_short_url() {
         let test_args = self::create_iter_from_cmd(
             "programm_name.exe -vvvv -mTEST123 -c2 -r3 -t4 -d5 http://address.local/short-test",
         );
@@ -177,7 +164,7 @@ mod tests {
         assert_eq!(cli.args.timeout, 4);
         assert_eq!(cli.args.delay, 5);
 
-        assert_eq!(&cli.args.address, "http://address.local/short-test");
+        assert_eq!(&cli.args.url, "http://address.local/short-test");
     }
 
     #[test]
@@ -207,7 +194,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_address_and_file_error() {
+    fn test_url_and_file_error() {
         let test_args =
             self::create_iter_from_cmd("programm_name.exe --file test.txt http://error.local/");
 
