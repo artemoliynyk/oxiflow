@@ -14,7 +14,10 @@ mod totals;
 
 #[derive(Default)]
 pub struct WorkerResult {
+    /// per-requests detail
     pub requests: Vec<Single>,
+    
+    /// total requests count
     pub totals: Totals,
 }
 

@@ -7,10 +7,10 @@
 pub mod request;
 pub mod result;
 
-use std::{thread, time::Duration};
+use std::{thread, time::Duration, vec};
 
 use crate::components::progressbar::Oxibar;
-use log;
+use log::{self};
 
 use self::{request::WorkerRequest, result::WorkerResult};
 
@@ -21,15 +21,20 @@ pub struct Worker {
     concurrent: u8,
     repeat: u8,
     delay: u8,
+    queue_handles: tokio::task::JoinSet<HttpResult>,
 }
 
 impl Worker {
     pub fn new(http_client: &'static HttpClient, concurrent: u8, repeat: u8, delay: u8) -> Worker {
+        let handles: tokio::task::JoinSet<HttpResult> = tokio::task::JoinSet::new();
+
         Worker {
             http_client,
             concurrent,
             repeat,
             delay,
+
+            queue_handles: handles,
         }
     }
 
@@ -40,53 +45,45 @@ impl Worker {
     /// will perfor delay between repeats and will check the HTTP client reponse.
     ///
     /// All the responses will be checked and recorded in `WorkerResult` struct.
-    pub async fn perform_requests(&self, requests: Vec<WorkerRequest>) -> Box<WorkerResult> {
-        if requests.len() > 1 {
-            panic!("Multiple URL are not supported yet!")
+    pub async fn execute(&mut self, mut requests: Vec<WorkerRequest>) -> Box<WorkerResult> {
+        if requests.is_empty() {
+            panic!("No URLs found to call");
         }
 
-        let request = requests.first().unwrap();
+        let concurrent = self.concurrent as usize;
 
-        let mut result = Box::new(WorkerResult::new());
-        let mut handles: tokio::task::JoinSet<HttpResult> = tokio::task::JoinSet::new();
+        // fill-up the URL for the single address
+        if requests.len() == 1 && self.concurrent > 1 {
+            let url = requests.first().unwrap().clone();
+            requests = vec![url; concurrent];
+        }
 
-        let mut progress_bar: Oxibar = Oxibar::new((self.repeat * self.concurrent) as u32);
+        let req_len = requests.len();
+
+        let mut result: Box<WorkerResult> = Box::new(WorkerResult::new());
+        let mut progress_bar: Oxibar = Oxibar::new((self.repeat * req_len as u8) as u32);
 
         for iteration in 0..self.repeat {
             if self.repeat > 1 {
                 log::info!(target: "worker::request", "Pass #{}", iteration + 1);
             }
 
-            for _ in 0..self.concurrent {
-                self.http_client.resolve_request(request).map_or_else(
-                    |_| {
-                        log::info!("Wrong HTTP method - skip and count skipped");
+            let step_size = match req_len <= concurrent {
+                true => req_len,
+                false => concurrent,
+            };
 
-                        log::error!("Error calling URL - wrong method: '{}'", request.method);
-                        result.totals.inc_skipped();
-                    },
-                    |req| {
-                        let future = self.http_client.execute_request(req);
-                        handles.spawn(future);
-                    },
-                );
-            }
+            let mut start = 0;
 
-            while let Some(res) = handles.join_next().await {
-                if log::max_level() <= log::Level::Warn {
-                    progress_bar.advance().print();
-                }
+            while start < req_len {
+                let offset = start + step_size;
+                let end = if offset < req_len { offset } else { req_len };
 
-                match res.unwrap() {
-                    Ok(client_response) => {
-                        result.success(&client_response);
-                        log::info!(target: "worker::request", "Response: {}", client_response);
-                    }
-                    Err(client_error) => {
-                        result.failure(&client_error);
-                        log::info!(target: "worker::request", "Failed: {}", client_error);
-                    }
-                }
+                let requests_slice = &requests[start..end];
+                self.enqueue_requests(requests_slice, &mut result);
+                self.join_queue(&mut result, &mut progress_bar).await;
+
+                start = end;
             }
 
             if self.repeat > 0 && self.delay > 0 {
@@ -97,5 +94,41 @@ impl Worker {
         }
 
         result
+    }
+
+    fn enqueue_requests(&mut self, requests: &[WorkerRequest], result: &mut Box<WorkerResult>) {
+        for request in requests.iter() {
+            self.http_client.resolve_request(request).map_or_else(
+                |_| {
+                    log::info!("Wrong HTTP method - skip and count skipped");
+
+                    log::error!("Error calling URL - wrong method: '{}'", request.method);
+                    result.totals.inc_skipped();
+                },
+                |req| {
+                    let future = self.http_client.execute_request(req);
+                    self.queue_handles.spawn(future);
+                },
+            );
+        }
+    }
+
+    async fn join_queue(&mut self, result: &mut Box<WorkerResult>, progress_bar: &mut Oxibar) {
+        while let Some(res) = self.queue_handles.join_next().await {
+            if log::max_level() <= log::Level::Warn {
+                progress_bar.advance().print();
+            }
+
+            match res.unwrap() {
+                Ok(client_response) => {
+                    result.success(&client_response);
+                    log::info!(target: "worker::request", "Response: {}", client_response);
+                }
+                Err(client_error) => {
+                    result.failure(&client_error);
+                    log::info!(target: "worker::request", "Failed: {}", client_error);
+                }
+            }
+        }
     }
 }

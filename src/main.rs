@@ -1,49 +1,64 @@
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 
+use std::error::Error;
 use std::process::ExitCode;
 
-use oxiflow::components::cli::Cli;
+use oxiflow::components::cli::{Args, Cli};
+use oxiflow::components::file_processor::FileProcessor;
 use oxiflow::components::http::client::HttpClient;
 use oxiflow::components::report;
 use oxiflow::components::worker::request::WorkerRequest;
 use oxiflow::components::worker::result::WorkerResult;
 use oxiflow::components::worker::Worker;
+use oxiflow::EXIT_NO_URLS_FOUND;
 
 fn main() -> ExitCode {
     let cli_tools = Cli::create();
     if let Err(exit_code) = cli_tools {
         return ExitCode::from(exit_code);
     }
-    let cli = cli_tools.unwrap();
+    let args = cli_tools.unwrap().args;
 
-    println!("Calling target: {} {}", &cli.args.method, &cli.args.address);
-    println!(
-        "Concurren clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec",
-        &cli.args.concurrent, &cli.args.repeat, &cli.args.timeout, &cli.args.delay
-    );
-    println!();
+    let requests = parse_requests(&args);
+    if let Err(error) = requests {
+        println!("No URLs to call");
+        println!("Error: {}", error);
+        return ExitCode::from(EXIT_NO_URLS_FOUND);
+    }
 
-    let http_client = Box::leak(Box::new(HttpClient::new(cli.args.timeout)));
-    let worker = Worker::new(
-        http_client,
-        cli.args.concurrent,
-        cli.args.repeat,
-        cli.args.delay,
-    );
+    print_intro(&args);
 
-    // aync runtime
+    let http_client = Box::leak(Box::new(HttpClient::new(args.timeout)));
+    let mut worker = Worker::new(http_client, args.concurrent, args.repeat, args.delay);
+
+    // async runtime
     let rt = tokio::runtime::Runtime::new().unwrap();
-    let result: Box<WorkerResult> = rt.block_on(async {
-        let request = WorkerRequest::new(cli.args.method, cli.args.address);
-        worker
-            .perform_requests(vec![request])
-            .await
-    });
+    let result: Box<WorkerResult> = rt.block_on(async { worker.execute(requests.unwrap()).await });
     println!();
 
     let report = report::Report::new(&result);
-
     report.print_report();
 
     ExitCode::SUCCESS
+}
+
+fn parse_requests(args: &Args) -> Result<Vec<WorkerRequest>, Box<dyn Error>> {
+    if !args.url.is_empty() {
+        Ok(vec![WorkerRequest::new(
+            args.method.clone(),
+            args.url.clone(),
+        )])
+    } else {
+        FileProcessor::new(&args.file).read_urls()
+    }
+}
+fn print_intro(args: &Args) {
+    if args.file.is_empty() {
+        println!("Calling target: {} {}", &args.method, &args.url);
+    }
+    
+    println!(
+        "Concurren clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec\n",
+        &args.concurrent, &args.repeat, &args.timeout, &args.delay
+    );
 }

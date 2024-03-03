@@ -5,3 +5,4 @@ pub mod http;
 pub mod worker;
 pub mod cli;
 pub mod report;
+pub mod file_processor;
