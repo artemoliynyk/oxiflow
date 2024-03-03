@@ -1,4 +1,4 @@
-GET http://localhost:8083/delay/100-500
+http://localhost:8083/delay/100-500
 GET http://localhost:8083/delay/500-2000?terminate
 POST http://localhost:8083/delay/1800
 

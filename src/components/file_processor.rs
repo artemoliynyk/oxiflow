@@ -7,6 +7,7 @@ use std::{
 
 use super::worker::request::WorkerRequest;
 
+#[derive(Default)]
 pub struct FileProcessor<'a> {
     file_path: &'a str,
 }
@@ -14,6 +15,11 @@ pub struct FileProcessor<'a> {
 impl<'a> FileProcessor<'a> {
     pub fn new(file_path: &str) -> FileProcessor<'_> {
         FileProcessor { file_path }
+    }
+
+    #[allow(dead_code)]
+    const fn mock() -> FileProcessor<'static> {
+        FileProcessor { file_path: "" }
     }
 
     pub fn read_urls(&self) -> Result<Vec<WorkerRequest>, Box<dyn Error>> {
@@ -49,13 +55,83 @@ impl<'a> FileProcessor<'a> {
     }
 
     fn parse_line(&self, line: &str) -> Option<WorkerRequest> {
-        if let Some(pos) = line.trim().find('\u{20}') {
-            let method = &line[0..pos];
-            let url = &line[pos + 1..];
-
-            return Some(WorkerRequest::new(method.to_string(), url.to_string()));
+        if line.is_empty() {
+            return None;
         }
 
-        None
+        let mut method = "GET";
+        let mut url = line.trim();
+
+        // any spaces may indicate method
+        if let Some(pos) = url.find('\u{20}') {
+            method = &url[0..pos];
+            url = &url[pos + 1..];
+        }
+        Some(WorkerRequest::new(method.to_string(), url.to_string()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FileProcessor;
+
+    const MOCK_URL: &str = "http://example.net/test-123";
+    const MOCK_PROCESSOR: FileProcessor<'_> = FileProcessor::mock();
+
+    #[test]
+    fn test_line_parsing_correct_url() {
+        let result = MOCK_PROCESSOR.parse_line("GET http://example.net/test-123");
+        assert!(result.is_some());
+
+        let req = result.unwrap();
+        assert_eq!(req.clone().method, "GET");
+        assert_eq!(req.clone().url, MOCK_URL);
+    }
+
+    #[test]
+    fn test_line_parsing_wrong_method() {
+        let result = MOCK_PROCESSOR.parse_line("OHNO http://example.net/test-123");
+        assert!(result.is_some());
+
+        let req = result.unwrap();
+        assert_eq!(req.clone().method, "OHNO");
+        assert_eq!(req.clone().url, MOCK_URL);
+    }
+
+    #[test]
+    fn test_line_parsing_empty_line() {
+        assert!(MOCK_PROCESSOR.parse_line("").is_none());
+    }
+
+    #[test]
+    fn test_line_parsing_space_padded_url() {
+        // with method
+        let result = MOCK_PROCESSOR.parse_line(" http://example.net/test-123");
+        assert!(result.is_some());
+
+        let req = result.unwrap();
+        assert_eq!(req.clone().method, "GET");
+        assert_eq!(req.clone().url, MOCK_URL);
+    }
+
+    #[test]
+    fn test_line_parsing_space_padded_method() {
+        // no method
+        let result = MOCK_PROCESSOR.parse_line(" POST http://example.net/test-123");
+        assert!(result.is_some());
+
+        let req = result.unwrap();
+        assert_eq!(req.clone().method, "POST");
+        assert_eq!(req.clone().url, MOCK_URL);
+    }
+
+    #[test]
+    fn test_line_parsing_no_method() {
+        let result = MOCK_PROCESSOR.parse_line("http://example.net/test-123");
+        assert!(result.is_some());
+
+        let req = result.unwrap();
+        assert_eq!(req.clone().method, "GET");
+        assert_eq!(req.clone().url, MOCK_URL);
     }
 }

@@ -48,7 +48,7 @@ mod tests {
         )];
 
         let response = worker.execute(requests).await;
-        assert!(response.totals.skipped == 2);
+        assert_eq!(response.totals.skipped, 2);
     }
 
     #[tokio::test]
@@ -58,7 +58,7 @@ mod tests {
         let requests: Vec<WorkerRequest> = vec![WorkerRequest::new(String::new(), String::new())];
 
         let response = worker.execute(requests).await;
-        assert!(response.totals.skipped == 2);
+        assert_eq!(response.totals.skipped, 2);
     }
 
     #[tokio::test]
@@ -70,7 +70,7 @@ mod tests {
         ];
 
         let response = worker.execute(requests).await;
-        assert!(response.totals.errors == 1);
-        assert!(response.totals.skipped == 1);
+        assert_eq!(response.totals.errors, 1);
+        assert_eq!(response.totals.skipped, 1);
     }
 }
