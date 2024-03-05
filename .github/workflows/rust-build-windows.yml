@@ -1,4 +1,4 @@
-name: Rust release build
+name: Rust Windows build
 
 on:
   push:
@@ -39,16 +39,22 @@ jobs:
         cd "${{ github.workspace }}/target/release/"
 
         # save version and checksum files
-        echo $env:PKG_VER > VERSION
+        echo $env:PKG_VER > VERSION.txt
         Get-FileHash -Algorithm SHA256 oxiflow.exe > oxiflow.checksum
 
-        # change permission and pack it all
-        tar -cvf "oxiflow-$env:PKG_VER.tar" oxiflow.exe oxiflow.checksum VERSION
+        # move to final folder
+        mkdir artifacts
+        mv oxiflow.exe artifacts
+        mv oxiflow.checksum artifacts
+        mv VERSION.txt artifacts
+
+        # # change permission and pack it all
+        # tar -cvf "oxiflow-$env:PKG_VER.tar" oxiflow.exe oxiflow.checksum VERSION
     
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: oxiflow-${{ env.PKG_VER }}-windows-x64
-        path: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
+        name: oxiflow-${{ env.PKG_VER }}-windows-x86_64
+        path: "${{ github.workspace }}/target/release/artifacts/**"
         overwrite: true
     
