@@ -101,6 +101,7 @@ jobs:
         # save version
         PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
         echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
+        echo "LIBC_VER=$(ldd --version | head -n1 | cut -d' ' -f5)" >> $GITHUB_ENV
 
         # go to release folder
         cd "${{ github.workspace }}/target/release/"
@@ -116,7 +117,7 @@ jobs:
     - name: upload-artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: oxiflow-${{ env.PKG_VER }}-linux-x86_64
+        name: oxiflow-${{ env.PKG_VER }}-linux-x86_64-libc-${{ env.LIBC_VER }}
         path: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
         overwrite: true
   
