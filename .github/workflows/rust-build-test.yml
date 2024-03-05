@@ -31,7 +31,7 @@ jobs:
         # save version
         PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
         echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
-        echo "LIBC_VER=$(ldd --version | head -n1 | cut -d' ' -f5) >> $GITHUB_ENV
+        echo "LIBC_VER=$(ldd --version | head -n1 | cut -d' ' -f5)" >> $GITHUB_ENV
 
         # go to release folder
         cd "${{ github.workspace }}/target/release/"
