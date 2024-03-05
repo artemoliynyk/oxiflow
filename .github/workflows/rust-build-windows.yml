@@ -20,11 +20,7 @@ jobs:
 
     - uses: actions/checkout@v3
     - name: test-release
-      run: |
-        cargo --version
-
-    # - name: test-release
-    #   run: cargo test --release --verbose
+      run: cargo test --release --verbose
         
     - name: build-release-win
       run: cargo build --release
@@ -40,7 +36,7 @@ jobs:
 
         # save version and checksum files
         echo $env:PKG_VER > VERSION.txt
-        Get-FileHash -Algorithm SHA256 oxiflow.exe > oxiflow.checksum
+        Get-FileHash -Algorithm SHA256 oxiflow.exe | Format-List > oxiflow.checksum
 
         # move to final folder
         mkdir artifacts
