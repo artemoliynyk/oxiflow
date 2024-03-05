@@ -32,14 +32,14 @@ jobs:
     - name: prepare-artifacts
       run: |
         # save version
-        $env:PKG_VER= (cargo pkgid | ForEach-Object {$_.split("#")[1]})
-        echo "PKG_VER=${PKG_VER}" >> $env:GITHUB_ENV
+        $env:PKG_VER = (cargo pkgid | ForEach-Object {$_.split("#")[1]})
+        echo "PKG_VER=$env:PKG_VER" >> $env:GITHUB_ENV
 
         # go to release folder
         cd "${{ github.workspace }}/target/release/"
 
         # save version and checksum files
-        echo $PKG_VER > VERSION
+        echo $env:PKG_VER > VERSION
         Get-FileHash -Algorithm SHA256 oxiflow.exe > oxiflow.checksum
 
         # change permission and pack it all

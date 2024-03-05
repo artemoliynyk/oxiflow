@@ -39,7 +39,7 @@ jobs:
 
         # save version and checksum files
         echo $PKG_VER > VERSION
-        shasum -a 1 -b oxiflow > oxiflow.checksum
+        shasum -a 256 -b oxiflow > oxiflow.checksum
 
         # change permission and pack it all
         chmod +x oxiflow
@@ -67,7 +67,7 @@ jobs:
 
         # save version and checksum files
         echo $PKG_VER > VERSION
-        shasum -a 1 -b oxiflow > oxiflow.checksum
+        shasum -a 256 -b oxiflow > oxiflow.checksum
 
         # change permission and pack it all
         chmod +x oxiflow
@@ -107,7 +107,7 @@ jobs:
 
         # save version and checksum files
         echo $PKG_VER > VERSION
-        shasum -a 1 -b oxiflow > oxiflow.checksum
+        shasum -a 256 -b oxiflow > oxiflow.checksum
 
         # change permission and pack it all
         chmod +x oxiflow
