@@ -34,10 +34,10 @@ fn main() -> ExitCode {
     // async runtime
     let rt = tokio::runtime::Runtime::new().unwrap();
     let result: Box<WorkerResult> = rt.block_on(async { worker.execute(requests.unwrap()).await });
-    println!();
+    println!("\nCompleted\n");
 
     let report = report::Report::new(&result);
-    report.print_report();
+    report.print_report(args.per_request);
 
     ExitCode::SUCCESS
 }
@@ -58,7 +58,7 @@ fn print_intro(args: &Args) {
     }
     
     println!(
-        "Concurren clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec\n",
+        "Concurrent clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec\n",
         &args.concurrent, &args.repeat, &args.timeout, &args.delay
     );
 }

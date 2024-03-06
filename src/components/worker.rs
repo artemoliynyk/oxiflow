@@ -61,7 +61,7 @@ impl Worker {
         let req_len = requests.len();
 
         let mut result: Box<WorkerResult> = Box::new(WorkerResult::new());
-        let mut progress_bar: Oxibar = Oxibar::new((self.repeat * req_len as u8) as u32);
+        let mut progress_bar: Oxibar = Oxibar::new(requests.len() as u32 * self.repeat as u32);
 
         for iteration in 0..self.repeat {
             if self.repeat > 1 {
