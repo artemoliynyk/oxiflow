@@ -1,4 +1,4 @@
-//! Report component. Printing, exporting and summarising session results
+//! Report components. Printing, exporting and summarising session results
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 use crate::components::worker::result::WorkerResult;
 
@@ -14,6 +14,7 @@ impl<'a> Report<'a> {
             worker_result: result,
         }
     }
+
     fn get_filler(&self, title: &str) -> String {
         let filler_size = (Self::REPORT_WIDTH - title.len() - 2) / 2;
 
@@ -55,14 +56,15 @@ impl<'a> Report<'a> {
         }
     }
 
-    pub fn print_report(&self) {
+    pub fn print_report(&self, per_request: bool) {
         self.print_into("Results");
         self.print_summary();
         self.print_per_code_result();
 
-        println!();
-        self.print_per_request();
-
+        if per_request {
+            println!();
+            self.print_per_request();
+        }
         self.print_end();
     }
 

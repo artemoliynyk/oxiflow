@@ -54,6 +54,10 @@ pub struct Args {
     /// Verbosity level accumulator, where '-v' some verbosity and '-vvvv' very verbose (trace)
     #[arg(short('v'), action(ArgAction::Count))]
     pub verbosity: u8,
+
+    /// Show per-request (per URL) stats
+    #[arg(long("per-request"))]
+    pub per_request: bool,
 }
 
 pub struct Cli {

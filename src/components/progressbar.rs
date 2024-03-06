@@ -126,12 +126,12 @@ impl Oxibar {
     ///
     ///  `(10, 2, 23)`, where `(total_cells, relative_cells_progress, percent_progress)`
     fn calculate_values(&self, total: u32, current: u32) -> (u32, u32, u32) {
-        let total = total as f32;
-        let _current = current as f32;
+        let f_total = total as f32;
+        let f_current = current as f32;
 
         let multiplier = 100.0 / self.size as f32;
-        let rate: f32 = self.size as f32 / total;
-        let rel_curr = rate * current as f32;
+        let rate: f32 = self.size as f32 / f_total;
+        let rel_curr = rate * f_current;
         let percent = rel_curr * multiplier;
 
         (self.size, rel_curr.floor() as u32, percent.ceil() as u32)
@@ -159,6 +159,14 @@ impl Oxibar {
     /// _Please note:_ printing anything between `print()` calls will result in broken output
     pub fn print(&self) {
         let (p_total, p_curr, percent) = self.calculate_values(self.total, self.current);
+
+        if p_total < p_curr {
+            let stub = self.style_filled.repeat(p_total as usize);
+            print!("\r{}[{}]   ?%/100% ({}/{})", self.label, stub, self.current, self.total);
+            std::io::stdout().flush().unwrap();
+            return;
+        }
+
         let left = p_total - p_curr;
 
         let cursor = match p_curr < p_total {
@@ -179,10 +187,6 @@ impl Oxibar {
             self.label, progress, self.current, self.total
         );
         std::io::stdout().flush().unwrap();
-
-        if p_total == p_curr {
-            println!("\x20");
-        }
     }
 }
 
@@ -244,5 +248,19 @@ mod tests {
             // it will slow tests down, but it helps to visually inspect the progress
             thread::sleep(Duration::from_millis(100));
         }
+    }
+
+    #[test]
+    fn print_advance_over_range() {
+        let mut progress_bar = Oxibar::new(5);
+
+        for i in 0..100 {
+            progress_bar.advance().print();
+            assert_eq!(progress_bar.current, i + 1);
+
+            // it will slow tests down, but it helps to visually inspect the progress
+            thread::sleep(Duration::from_millis(100));
+        }
+        println!();
     }
 }

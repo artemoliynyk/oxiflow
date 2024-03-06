@@ -79,6 +79,13 @@ mod tests {
     const MOCK_PROCESSOR: FileProcessor<'_> = FileProcessor::mock();
 
     #[test]
+    fn test_no_file() {
+        let file_processor = FileProcessor::new("nonexistent.file");
+        let res = file_processor.read_file();
+        assert!(res.is_err());
+    }
+
+    #[test]
     fn test_line_parsing_correct_url() {
         let result = MOCK_PROCESSOR.parse_line("GET http://example.net/test-123");
         assert!(result.is_some());
