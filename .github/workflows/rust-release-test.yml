@@ -1,0 +1,62 @@
+name: Rust release build
+
+on:
+  push:
+    tags:
+      - 'release-*'
+    
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: prepare rust 1.75
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        rustup install 1.75.0
+        rustup default 1.75.0
+
+    - uses: actions/checkout@v3
+    - name: test-release
+      if: startsWith(github.ref, 'refs/tags/')
+      run: cargo test --release --verbose
+        
+    # Linux x86_64
+    - name: build-release x86_64
+      if: startsWith(github.ref, 'refs/tags/')
+      run: cargo build --release
+
+    - name: prepare-artifacts x86_64
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        # save version
+        PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
+        echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
+        echo "LIBC_VER=$(ldd --version | head -n1 | cut -d' ' -f5)" >> $GITHUB_ENV
+
+        # go to release folder
+        cd "${{ github.workspace }}/target/release/"
+
+        # save version and checksum files
+        echo $PKG_VER > VERSION
+        shasum -a 256 -b oxiflow > oxiflow.checksum
+
+        # change permission and pack it all
+        chmod +x oxiflow
+        tar -cvf "oxiflow-${PKG_VER}.tar" oxiflow oxiflow.checksum VERSION
+    
+    - name: upload-artifacts
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v4
+      with:
+        name: oxiflow-${{ env.PKG_VER }}-linux-x86_64-libc-${{ env.LIBC_VER }}
+        path: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
+    
+    - name: create a release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        name: "v${{ env.PKG_VER }}"
+        files: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
