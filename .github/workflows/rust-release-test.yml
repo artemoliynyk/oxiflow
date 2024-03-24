@@ -17,10 +17,6 @@ jobs:
       run: |
         rustup install 1.75.0
         rustup default 1.75.0
-
-    - uses: actions/checkout@v3
-    - name: test-release
-      run: cargo test --release --verbose
         
     # Linux x86_64
     - name: build-release x86_64
@@ -32,6 +28,7 @@ jobs:
         PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
         echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
         echo "LIBC_VER=$(ldd --version | head -n1 | cut -d' ' -f5)" >> $GITHUB_ENV
+        echo "PKG_FILENAME=oxiflow-linux-x86_64-${{ env.PKG_VER }}-libc-${{ env.LIBC_VER }}.tar.gz" >> $GITHUB_ENV
 
         # go to release folder
         cd "${{ github.workspace }}/target/release/"
@@ -42,16 +39,57 @@ jobs:
 
         # change permission and pack it all
         chmod +x oxiflow
-        tar -cvf "oxiflow-${PKG_VER}.tar" oxiflow oxiflow.checksum VERSION
-    
-    - name: upload-artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: oxiflow-${{ env.PKG_VER }}-linux-x86_64-libc-${{ env.LIBC_VER }}
-        path: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
+        tar -cvfz "${{ env.PKG_FILENAME}}" oxiflow oxiflow.checksum VERSION
     
     - name: create a release
       uses: softprops/action-gh-release@v2
       with:
         name: "v${{ env.PKG_VER }}"
-        files: "${{ github.workspace }}/target/release/oxiflow-${{ env.PKG_VER }}.tar"
+        generate_release_notes: false
+        body: "To be provided..."
+        files: "${{ github.workspace }}/target/release/${{ env.PKG_FILENAME}}"
+  
+  build-macos:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-latest
+    steps:
+    - name: prepare rust 1.75
+      run: |
+        rustup install 1.75.0
+        rustup default 1.75.0
+        rustup target add aarch64-apple-darwin
+
+    - uses: actions/checkout@v3
+    - name: test-release
+      run: cargo test --release --verbose
+        
+    # MacOS x86_64
+    - name: build-release x86_64
+      run: cargo build --release
+
+    - name: prepare-artifacts x86_64
+      run: |
+        # save version
+        PKG_VER=`cargo pkgid | cut -d# -f2 | cut -d: -f2`
+        echo "PKG_VER=${PKG_VER}" >> $GITHUB_ENV
+        echo "PKG_FILENAME=oxiflow-macos-x86_64-${{ env.PKG_VER }}.tar.gz" >> $GITHUB_ENV
+
+        # go to release folder
+        cd "${{ github.workspace }}/target/release/"
+
+        # save version and checksum files
+        echo $PKG_VER > VERSION
+        shasum -a 256 -b oxiflow > oxiflow.checksum
+
+        # change permission and pack it all
+        chmod +x oxiflow
+        tar -cvfz "${{ env.PKG_FILENAME }}" oxiflow oxiflow.checksum VERSION
+    
+      
+    - name: create a release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: "v${{ env.PKG_VER }}"
+        generate_release_notes: false
+        body: "To be provided..."
+        files: "${{ github.workspace }}/target/release/${{ env.PKG_FILENAME}}"

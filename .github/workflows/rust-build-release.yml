@@ -12,6 +12,7 @@ env:
 
 jobs:
   build-macos:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: macos-latest
     steps:
     - name: prepare rust 1.75
@@ -81,6 +82,7 @@ jobs:
   
   
 #   build-linux:
+#     if: startsWith(github.ref, 'refs/tags/')
 #     runs-on: ubuntu-latest
 #     steps:
 #     - name: prepare rust 1.75
@@ -122,6 +124,7 @@ jobs:
 #         overwrite: true
   
 #   build-windows:
+#     if: startsWith(github.ref, 'refs/tags/')
 #     runs-on: windows-latest
 #     steps:
 #     - name: prepare rust 1.75
