@@ -1,24 +1,24 @@
-# name: Rust release build
+name: Rust release build
 
-# on:
-#   push:
-#     tags:
-#       - 'release-*'
-#     branches:
-#       - 'release/**'
+on:
+  push:
+    tags:
+      - 'release-*'
+    branches:
+      - 'release/**'
     
-# env:
-#   CARGO_TERM_COLOR: always
+env:
+  CARGO_TERM_COLOR: always
 
-# jobs:
-#   build-macos:
-#     runs-on: macos-latest
-#     steps:
-#     - name: prepare rust 1.75
-#       run: |
-#         rustup install 1.75.0
-#         rustup default 1.75.0
-#         rustup target add aarch64-apple-darwin
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - name: prepare rust 1.75
+      run: |
+        rustup install 1.75.0
+        rustup default 1.75.0
+        rustup target add aarch64-apple-darwin
 
 #     - uses: actions/checkout@v3
 #     - name: test-release
