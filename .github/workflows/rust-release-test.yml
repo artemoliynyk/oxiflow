@@ -1,6 +1,11 @@
 name: Release test 
 
-on: push
+on:
+  push:
+    tags:
+      - 'release-*'
+    branches:
+      - '**'
 
 env:
   CARGO_TERM_COLOR: always
