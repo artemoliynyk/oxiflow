@@ -1,7 +1,7 @@
 name: Release test 
 
 on: push
-    
+
 env:
   CARGO_TERM_COLOR: always
 
