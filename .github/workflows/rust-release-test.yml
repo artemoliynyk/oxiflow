@@ -1,7 +1,9 @@
 name: Release test 
 
-on:
-  push
+on: push
+
+permissions:
+  contents: write
 
 env:
   CARGO_TERM_COLOR: always
