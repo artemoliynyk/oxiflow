@@ -42,7 +42,7 @@ impl Worker {
     /// will show the progress or extra debug info.
     ///
     /// This method will check how many time to repeat, how many concurrent requests to perform,
-    /// will perfor delay between repeats and will check the HTTP client reponse.
+    /// will perform delay between repeats and will check the HTTP client response.
     ///
     /// All the responses will be checked and recorded in `WorkerResult` struct.
     pub async fn execute(&mut self, mut requests: Vec<WorkerRequest>) -> Box<WorkerResult> {
@@ -73,23 +73,23 @@ impl Worker {
                 false => concurrent,
             };
 
-            let mut start = 0;
+            let mut batch_start = 0;
 
-            while start < req_len {
-                let offset = start + step_size;
-                let end = if offset < req_len { offset } else { req_len };
+            while batch_start < req_len {
+                let offset = batch_start + step_size;
+                let batch_end = if offset < req_len { offset } else { req_len };
 
-                let requests_slice = &requests[start..end];
-                self.enqueue_requests(requests_slice, &mut result);
+                let requests_batch = &requests[batch_start..batch_end];
+                self.enqueue_requests(requests_batch, &mut result);
                 self.join_queue(&mut result, &mut progress_bar).await;
 
-                start = end;
-            }
-
-            if self.repeat > 0 && self.delay > 0 {
-                log::info!("Waiting before repeating requests' batch {}s", self.delay);
-
-                thread::sleep(Duration::from_secs(self.delay as u64));
+                batch_start = batch_end;
+                
+                if self.delay > 0 {
+                    log::info!("Waiting between requests/batches' batch {}s", self.delay);
+                    
+                    thread::sleep(Duration::from_secs(self.delay as u64));
+                }
             }
         }
 

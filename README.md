@@ -45,6 +45,7 @@ Planned features:
   - [x] PATCH
 - [ ] Testing scenarios:
   - [x] URLs file (with methods)
+  - [ ] Request content/body
   - [ ] Pre-test actions (Auth)
 - [ ] Reporting component
   - [ ] Toggleable coloured output
