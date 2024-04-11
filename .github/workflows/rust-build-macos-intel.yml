@@ -10,7 +10,7 @@ env:
 
 jobs:
   build-macos:
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/release')
     runs-on: macos-latest
     steps:
     - name: prepare rust 1.75
@@ -49,12 +49,6 @@ jobs:
         chmod +x oxiflow
         tar -czvf"${TAR_FILE}" oxiflow oxiflow.checksum VERSION.txt
     
-    # - name: upload-artifacts
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ env.PKG_FILENAME }}
-    #     path: "${{ github.workspace }}/target/release/${{ env.PKG_FILENAME }}"
-
     - name: create a release
       uses: softprops/action-gh-release@v2
       with:
