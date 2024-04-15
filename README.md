@@ -29,7 +29,7 @@ If you have only one URL to call - you can provide just a URL and method (option
 
 
 ### File
-But if you have a set of different URL or you want to call the same URL but use few different HTTP methods - then the file is the choice here: `-f` or `--file`.
+But if you have a set of different URLs or you want to call the same URL but use few different HTTP methods - then the file is the choice here: `-f` or `--file`.
 
 ```test
 # this is sample file called url-list.txt
@@ -44,8 +44,7 @@ Following command will call each URL defined in the file
 ./oxiflow -f url-list.txt
 ```
 
-Comments in file are supported, using `#` character on the beginning of the line.
-
+Comments in file are supported, use `#` character on the beginning of the line.
 
 
 ## Common arguments
@@ -58,13 +57,13 @@ _At any time - refer to the help for currently available options (`-h`)._
 - **delay** (`-d`) - delay in seconds between repeating requests batches.
 Concurrent requests are performed simultaneously, without delay. Consider disabling concurrence with `-c0` if you want to have delay between each request
 - **reporting** (`--per-request`) - will produce per-URL report output
-- **verbosity level** (`-v`) - use to print more details during calls. This is accumulator argument, meaning more `v` you add - more verbosity it provides. Where `-v` is some verbosity and `-vvvv` is a maximal (trace output). 
+- **verbosity level** (`-v`) - use to print more details during calls. This is accumulator argument, meaning the more `v` you add - more verbosity it provides. Where `-v` is some verbosity and `-vvvv` is a maximal (trace output). 
 
 
 ## Concurrency and repeats
 > **TL; DR:** concurrency argument with a single URL will multiply the very same URL C-times, while with file it will divide URLs list into C-sized pieces
 
-Concurrency work a little bit different with single URL and file-provided URLs, however the idea is very similar - it just forms the requests batch.
+Concurrency works a little bit different with a single URL and file-provided URLs, however the idea is very similar - it just forms the requests batch.
 
 After batches were formed - they will be called concurrently and will repeated it according to the `-r` parameter.
 
@@ -82,7 +81,7 @@ oxiflow -c 5 -r 2 http://localhost:8080/test-url.html
 ## Sample test flow
 Following command will perform 3 concurrent requests (simultaneously) to the defined site and will repeat such requests batch 4 time, with timeout of 2 seconds and will trigger delay of 2 seconds between every batch 
 
-This will result in `3 x 4 = 12` total requests attempts. If server will fail to respond in 2 seconds – connection will be dropped and attempt will be recorded as an error.
+This will result in `3 x 4 = 12` total requests attempts. If server will fail to respond in 2 seconds - connection will be dropped and attempt will be recorded as an error.
 
 ```shell
 oxiflow -t 2 -c 3 -r 4 -d 2 http://localhost:8080/test-url.html

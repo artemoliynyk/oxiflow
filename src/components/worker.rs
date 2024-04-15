@@ -84,10 +84,14 @@ impl Worker {
                 self.join_queue(&mut result, &mut progress_bar).await;
 
                 batch_start = batch_end;
-                
-                if self.delay > 0 {
+
+                let remain_batches = batch_start < req_len;
+                let remain_repeats = iteration + 1 < self.repeat;
+
+                // check for remaining repeats/batches to avoid trailing delay
+                if self.delay > 0 && (remain_batches || remain_repeats) {
                     log::info!("Waiting between requests/batches' batch {}s", self.delay);
-                    
+
                     thread::sleep(Duration::from_secs(self.delay as u64));
                 }
             }
