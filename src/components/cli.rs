@@ -12,42 +12,46 @@ use crate::components::http;
 #[command(author, version, about, long_about = None)]
 /// Simple, fast, concurrent load tester with minimal reporting
 pub struct Args {
-    /// address to call
+    /// singe URL to call
     #[arg(
         conflicts_with("file"),
         required_unless_present("file"),
+        required_unless_present("help_methods"),
+        required_unless_present("help_file"),
         default_value = ""
     )]
     pub url: String,
 
-    /// config file with URLs definition to call
+    /// HTTP method to use for calling the singe URL
+    #[arg(long, short('m'), conflicts_with("file"), default_value = "GET")]
+    pub method: String,
+
+    /// text file with methods (optional) and URLs call, lines format: [METHOD] <URL>
     #[arg(
         long,
         short('f'),
         conflicts_with("url"),
         required_unless_present("url"),
+        required_unless_present("help_methods"),
+        required_unless_present("help_file"),
         default_value = ""
     )]
     pub file: String,
-
-    /// which HTTP method to use for a call, try -mHELP to get list of supported methods
-    #[arg(long, short('m'), conflicts_with("file"), default_value = "GET")]
-    pub method: String,
 
     /// how many request to send concurrently
     #[arg(long, short('c'), default_value_t = 1)]
     pub concurrent: u8,
 
-    /// how many times to repeat
+    /// how many times to repeat either single URL call or of all URLs in file.
     #[arg(long, short('r'), default_value_t = 1)]
     pub repeat: u8,
 
-    /// request timeout in seconds
+    /// (seconds) request timeout, all requests lasting longer will be cancelled
     #[arg(long, short('t'), default_value_t = 2)]
     pub timeout: u8,
 
-    /// delay in seconds between repeating requests batches.
-    /// Concurrent requests performed concurrently with no delay
+    /// (seconds) delay in between repeating requests or batches.
+    /// If concurrency is greater than 1 - delay will occur between the batches, not individual URLs
     #[arg(long, short('d'), default_value_t = 0)]
     pub delay: u8,
 
@@ -55,9 +59,17 @@ pub struct Args {
     #[arg(short('v'), action(ArgAction::Count))]
     pub verbosity: u8,
 
-    /// Show per-request (per URL) stats
+    /// Show per-request report
     #[arg(long("per-request"))]
     pub per_request: bool,
+
+    /// Show supported methods
+    #[arg(long("help-methods"))]
+    pub help_methods: bool,
+
+    /// Produce sample URLs file
+    #[arg(long("help-file"))]
+    pub help_file: bool,
 }
 
 pub struct Cli {
@@ -75,10 +87,29 @@ impl Cli {
         };
         cli.set_log_level();
 
-        if !http::method_supported(&cli.args.method) {
-            println!("Defined method is not supported '{}'", &cli.args.method);
+        if cli.args.help_methods {
             println!("Supported methods: {}", http::list_methods());
+            return Err(0);
+        }
 
+        if cli.args.help_file {
+            const URL: &str = "http://site.test/url/path?foo=bar";
+
+            println!("# this is comment, it will be ignored as well as empty lines\n\n");
+            println!("# following URL will be called with default method: GET");
+            println!("{}\n", URL);
+            println!("# to get all avaialable methods use '--help-methods' argument");
+            for method in http::SUPPORTED_HTTP_METHODS.iter() {
+                println!("{} {}", method, URL);
+            }
+            return Err(0);
+        }
+
+        if !http::method_supported(&cli.args.method) {
+            println!(
+                "Defined method is not supported '{}', try '--help-methods'",
+                &cli.args.method
+            );
             return Err(crate::EXIT_UNKNOWN_METHOD);
         }
 
@@ -98,7 +129,7 @@ impl Cli {
         Cli::new(args_collection.into_iter())
     }
 
-    /// Create a Cli instance with all th eargs
+    /// Create a Cli instance with all the args
     pub fn new(args: IntoIter<OsString>) -> Result<Cli, clap::error::Error> {
         Args::try_parse_from(args).map_or_else(
             |err: clap::error::Error| Err(err),
@@ -136,7 +167,7 @@ mod tests {
     #[test]
     fn test_long_url() {
         let test_args = self::create_iter_from_cmd(
-            "programm_name.exe -vvv --method TEST123 --concurrent 2 --repeat 3 --timeout 4 \
+            "program_name.exe -vvv --method TEST123 --concurrent 2 --repeat 3 --timeout 4 \
             --delay 5 http://address.local/long-test",
         );
 
@@ -155,7 +186,7 @@ mod tests {
     #[test]
     fn test_short_url() {
         let test_args = self::create_iter_from_cmd(
-            "programm_name.exe -vvvv -mTEST123 -c2 -r3 -t4 -d5 http://address.local/short-test",
+            "program_name.exe -vvvv -mTEST123 -c2 -r3 -t4 -d5 http://address.local/short-test",
         );
 
         let cli = Cli::new(test_args)
@@ -173,7 +204,7 @@ mod tests {
 
     #[test]
     fn test_short_file() {
-        let test_args = self::create_iter_from_cmd("programm_name.exe -c3 -r2 -t1 -f filename.txt");
+        let test_args = self::create_iter_from_cmd("program_name.exe -c3 -r2 -t1 -f filename.txt");
 
         let cli = Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
 
@@ -191,7 +222,7 @@ mod tests {
     #[should_panic]
     fn test_wrong_values() {
         let test_args =
-            self::create_iter_from_cmd("programm_name.exe --repeat TWICE http://error.local/");
+            self::create_iter_from_cmd("program_name.exe --repeat TWICE http://error.local/");
 
         Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
     }
@@ -200,7 +231,7 @@ mod tests {
     #[should_panic]
     fn test_url_and_file_error() {
         let test_args =
-            self::create_iter_from_cmd("programm_name.exe --file test.txt http://error.local/");
+            self::create_iter_from_cmd("program_name.exe --file test.txt http://error.local/");
 
         Cli::new(test_args).map_or_else(|err| panic!("{}", err), |instance| instance);
     }

@@ -62,6 +62,11 @@ impl<'a> FileProcessor<'a> {
         let mut method = "GET";
         let mut url = line.trim();
 
+        // comment line
+        if url.starts_with('#') {
+            return None;
+        }
+
         // any spaces may indicate method
         if let Some(pos) = url.find('\u{20}') {
             method = &url[0..pos];
