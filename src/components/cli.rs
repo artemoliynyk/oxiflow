@@ -22,7 +22,7 @@ pub struct Args {
     )]
     pub url: String,
 
-    /// HTTP method to use for calling the singe URL, try -mHELP to get the list of supported methods
+    /// HTTP method to use for calling the singe URL
     #[arg(long, short('m'), conflicts_with("file"), default_value = "GET")]
     pub method: String,
 

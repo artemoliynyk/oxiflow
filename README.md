@@ -20,12 +20,7 @@ Download version for your favourite OS, run in command line.
 
 Tester can work both with single URL and file list with URLs and methods.
 
-For now, only following methods are supported:
-- `GET`
-- `POST`
-- `DELETE`
-- `PUT`
-- `PATCH`
+Supported methods available get be retrieved by using argument `--help-methods` 
 
 ## Single URL vs. File
 There are two main exclusive arguments to provide test targets: File or URL.
