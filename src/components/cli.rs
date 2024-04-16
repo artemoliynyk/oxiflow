@@ -16,6 +16,8 @@ pub struct Args {
     #[arg(
         conflicts_with("file"),
         required_unless_present("file"),
+        required_unless_present("help_methods"),
+        required_unless_present("help_file"),
         default_value = ""
     )]
     pub url: String,
@@ -30,6 +32,8 @@ pub struct Args {
         short('f'),
         conflicts_with("url"),
         required_unless_present("url"),
+        required_unless_present("help_methods"),
+        required_unless_present("help_file"),
         default_value = ""
     )]
     pub file: String,
@@ -58,6 +62,14 @@ pub struct Args {
     /// Show per-request report
     #[arg(long("per-request"))]
     pub per_request: bool,
+
+    /// Show supported methods
+    #[arg(long("help-methods"))]
+    pub help_methods: bool,
+
+    /// Produce sample URLs file
+    #[arg(long("help-file"))]
+    pub help_file: bool,
 }
 
 pub struct Cli {
@@ -75,10 +87,29 @@ impl Cli {
         };
         cli.set_log_level();
 
-        if !http::method_supported(&cli.args.method) {
-            println!("Defined method is not supported '{}'", &cli.args.method);
+        if cli.args.help_methods {
             println!("Supported methods: {}", http::list_methods());
+            return Err(0);
+        }
 
+        if cli.args.help_file {
+            const URL: &str = "http://site.test/url/path?foo=bar";
+
+            println!("# this is comment, it will be ignored as well as empty lines\n\n");
+            println!("# following URL will be called with default method: GET");
+            println!("{}\n", URL);
+            println!("# to get all avaialable methods use '--help-methods' argument");
+            for method in http::SUPPORTED_HTTP_METHODS.iter() {
+                println!("{} {}", method, URL);
+            }
+            return Err(0);
+        }
+
+        if !http::method_supported(&cli.args.method) {
+            println!(
+                "Defined method is not supported '{}', try '--help-methods'",
+                &cli.args.method
+            );
             return Err(crate::EXIT_UNKNOWN_METHOD);
         }
 

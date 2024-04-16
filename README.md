@@ -1,7 +1,21 @@
 # oxiflow
 Small yet functional load testing tool written in Rust (oh yeah, "blazingly fast", of course)
 
-## Usage
+# Quick start
+Download version for your favourite OS, run in command line.
+
+**Following command will:** Perform 4 concurrent request and repeat it 3 time, wait 2 seconds between repeats (after every 4 request), set response timeout to 1 seconds, print per-request summary after execution and print trace-level debug info while working.
+```shell
+./oxiflow -c4 -r3 -d2 -t1 --per-request -vvvv https://site.test/url/path
+```
+---
+
+**This command will:** read URLs from the file `urls.txt`, will split all the URLs into 5 batches and run each batch concurrently with 1 second delay (every 5 requests) and response timeout of 2 seconds. It will show per-request information after execution and will how no extra log, but a progress bar.
+```shell
+./oxiflow -c5 -d1 -t2 --per-request -f urls.txt
+```
+
+# Detailed usage explanation
 `oxiflow` tester can perform up to 255 concurrent request, with custom timeout between calls or batches and repeats.
 
 Tester can work both with single URL and file list with URLs and methods.
@@ -31,6 +45,8 @@ If you have only one URL to call - you can provide just a URL and method (option
 ### File
 But if you have a set of different URLs or you want to call the same URL but use few different HTTP methods - then the file is the choice here: `-f` or `--file`.
 
+> To get a sample file just use argument `--help-file` and program will produce dummy text file with all the suported methods and features
+
 ```test
 # this is sample file called url-list.txt
 https://site.test/critical-endpoint
@@ -44,13 +60,15 @@ Following command will call each URL defined in the file
 ./oxiflow -f url-list.txt
 ```
 
+
 Comments in file are supported, use `#` character on the beginning of the line.
 
 
 ## Common arguments
 _At any time - refer to the help for currently available options (`-h`)._
 
-- **method** (`-m`) – which HTTP method to use when calling single URL (GET, POST, etc.). Supported methods will change overtime, so the best way is to get then is by adding argument `-mHELP`
+- **method** (`-m`) – which HTTP method to use when calling single URL (GET, POST, etc.). 
+- **methods list** (`--help-methods`) – list currently supported methods
 - **concurrent** (`-c`) - define many request to send in parallel (might be systems dependent, max. 255)
 - **repeat** (`-r`) - how many times to repeat defined batch of concurrent requests (max. 255)
 - **timeout** (`-t`) - response timeout in _seconds_, if server won't respond in required interval - connection will be terminated and requests will be considered as failed
