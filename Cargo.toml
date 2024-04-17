@@ -15,12 +15,12 @@ log = "0.4.20"
 env_logger = "0.10.1"
 
 [lints.rust]
+rust_2018_idioms = "deny"
 elided_lifetimes_in_paths = "warn"
-future_incompatible = "warn"
 keyword_idents = "warn"
 non_ascii_idents = "warn"
 noop_method_call = "warn"
-rust_2018_idioms = "deny"
+future_incompatible = "warn"
 
 [lints.clippy]
 char_lit_as_u8 = "warn" # restriction
@@ -40,7 +40,6 @@ float_equality_without_abs = "warn" # suspicious
 inefficient_to_string = "warn" # pedantic
 lossy_float_literal = "warn" # restriction
 mem_forget = "warn" # restriction
-# missing_const_for_fn = "warn" # nursery
 mod_module_files = "warn" # restriction
 mut_mut = "warn" # pedantic
 mutex_integer = "warn" # nursery
@@ -63,7 +62,6 @@ suspicious_operation_groupings = "warn" # nursery
 todo = "warn" # restriction
 unimplemented = "warn" # restriction
 unnested_or_patterns = "warn" # pedantic
-# unused_self = "warn" # pedantic
 use_debug = "warn" # restriction
 used_underscore_binding = "warn" # pedantic
 useless_let_if_seq = "warn" # nursery
