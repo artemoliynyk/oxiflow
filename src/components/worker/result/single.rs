@@ -2,7 +2,7 @@
 
 // TODO: add request start time
 
-#[derive(Default)]
+#[derive(Default, serde::Serialize)]
 pub struct Single {
     pub success: bool,
     pub url: String,
