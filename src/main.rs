@@ -8,7 +8,7 @@ use oxiflow::components::file_processor::FileProcessor;
 use oxiflow::components::http::client::HttpClient;
 use oxiflow::components::report;
 use oxiflow::components::worker::request::WorkerRequest;
-use oxiflow::components::worker::result::{self, WorkerResult};
+use oxiflow::components::worker::result::WorkerResult;
 use oxiflow::components::worker::Worker;
 use oxiflow::EXIT_NO_URLS_FOUND;
 
