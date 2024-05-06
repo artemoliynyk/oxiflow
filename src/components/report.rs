@@ -2,6 +2,8 @@
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 use std::{fs::File, io::Error, path::Path};
 
+use chrono::Local;
+
 use self::txt::ReportTxt;
 
 use super::{cli::ReportFormats, worker::result::WorkerResult};
@@ -66,8 +68,12 @@ pub fn create_report(format: &ReportFormats, worker_result: &'static WorkerResul
         ReportFormats::Csv => todo!(),
     };
 
-    let base_name = "base_name";
-    report.set_filename(base_name.into());
+    let current_time = Local::now()
+        .format("%Y%m%d-%H%M%S")
+        .to_string();
+
+    let base_name = format!("oxiflow_report_{}", current_time);
+    report.set_filename(base_name);
 
     match report.write_report() {
         Ok(report_lines) => println!(
