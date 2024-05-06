@@ -9,6 +9,7 @@ pub struct Single {
     pub method: String,
     pub http_code: Option<u16>,
     pub time_ms: Option<u128>,
+    pub timeout: Option<u128>,
 }
 
 impl Single {
@@ -19,14 +20,16 @@ impl Single {
             method,
             http_code: Some(response_code),
             time_ms: Some(elapsed),
+            timeout: None,
         }
     }
 
-    pub fn failure(url: String, method: String) -> Single {
+    pub fn failure(url: String, method: String, timeout: Option<u128>) -> Single {
         Single {
             success: false,
             url,
             method,
+            timeout,
             ..Default::default()
         }
     }

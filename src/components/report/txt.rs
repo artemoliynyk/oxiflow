@@ -1,7 +1,4 @@
-use std::{
-    fs::File,
-    io::{Error, Write},
-};
+use std::io::{Error, Write};
 
 use crate::components::worker::result::WorkerResult;
 
@@ -37,12 +34,35 @@ impl Report for ReportTxt {
         let mut file = self.open_file(&self.filename)?;
 
         for record in self.result.requests.iter() {
-            let line = format!("{} {}ms {} {}\n", record.success, record.time_ms.unwrap_or(0), record.method, record.url);
+            let rep_status = match record.success {
+                true => "HTTP".to_string(),
+                false => record.timeout.map_or_else(
+                    || "ERROR".to_string(),
+                    |timeout_ms| format!("Timeout: {}ms", timeout_ms),
+                ),
+            };
+
+            let rep_code = record
+                .http_code
+                .map_or_else(String::new, |code| format!("{}", code));
+
+            let rep_time = record
+                .time_ms
+                .map_or_else(String::new, |time| format!("{}ms", time));
+
+            let line = format!(
+                "{method} {url}\n{status} {code} {time}\n\n",
+                method = record.method,
+                url = record.url,
+                status = rep_status,
+                code = rep_code,
+                time = rep_time
+            );
             let bytes_written = file.write(line.as_bytes())?;
 
-            log::debug!("REPORT: Record: bytes written {}", bytes_written);
+            log::debug!("[REPORT][TXT]: Record: bytes written {}", bytes_written);
         }
 
-        return Ok(self.result.requests.len() as u128);
+        Ok(self.result.requests.len() as u128)
     }
 }
