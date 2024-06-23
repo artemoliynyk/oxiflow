@@ -61,18 +61,21 @@ trait Report {
     }
 }
 
+fn format_current_time() -> String {
+    Local::now().format("%Y%m%d-%H%M%S").to_string()
+}
+
+fn get_base_filename() -> String {
+    format!("oxiflow_report_{}", format_current_time())
+}
+
 pub fn create_report(format: &ReportFormats, worker_result: &'static WorkerResult) {
     let mut report: Box<dyn Report> = match &format {
-        // ReportFormats::Csv => Box::new(ReportCsv::new(worker_result)),
         ReportFormats::Txt => Box::new(ReportTxt::new(worker_result)),
         ReportFormats::Csv => todo!(),
     };
 
-    let current_time = Local::now()
-        .format("%Y%m%d-%H%M%S")
-        .to_string();
-
-    let base_name = format!("oxiflow_report_{}", current_time);
+    let base_name = get_base_filename();
     report.set_filename(base_name);
 
     match report.write_report() {

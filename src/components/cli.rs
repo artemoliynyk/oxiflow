@@ -71,6 +71,10 @@ pub struct Args {
     #[arg(long("help-file"))]
     pub help_file: bool,
 
+    /// Save report data, can be used to format report later
+    #[arg(long("dump-report"))]
+    pub dump_report: bool,
+
     /// Generate report
     #[arg(long("report"))]
     #[clap(value_enum)]
