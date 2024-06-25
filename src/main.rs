@@ -32,12 +32,19 @@ fn main() -> ExitCode {
     let mut worker = Worker::new(http_client, args.concurrent, args.repeat, args.delay);
 
     // async runtime
-    let rt = tokio::runtime::Runtime::new().unwrap();
+    let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
     let result: Box<WorkerResult> = rt.block_on(async { worker.execute(requests.unwrap()).await });
     println!("\nCompleted\n");
 
-    let report = report::Report::new(&result);
+    // make it 'static
+    let result = Box::leak(result);
+
+    let report = report::output::ReportOutput::new(result);
     report.print_report(args.per_request);
+
+    if let Some(report_format) = &args.report {
+        report::create_report(report_format, result);
+    }
 
     ExitCode::SUCCESS
 }
@@ -56,7 +63,7 @@ fn print_intro(args: &Args) {
     if args.file.is_empty() {
         println!("Calling target: {} {}", &args.method, &args.url);
     }
-    
+
     println!(
         "Concurrent clients: {}\nRepeat: {}\nTimeout: {} sec\nDelay: {} sec\n",
         &args.concurrent, &args.repeat, &args.timeout, &args.delay

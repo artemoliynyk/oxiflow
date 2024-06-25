@@ -1,92 +1,89 @@
 //! Report components. Printing, exporting and summarising session results
 #![allow(clippy::print_stderr, clippy::print_stdout)]
-use crate::components::worker::result::WorkerResult;
+use std::{fs::File, io::Error, path::Path};
 
-pub struct Report<'a> {
-    worker_result: &'a WorkerResult,
+use chrono::Local;
+
+use self::txt::ReportTxt;
+
+use super::{cli::ReportFormats, worker::result::WorkerResult};
+
+// pub mod csv;
+pub mod output;
+pub mod txt;
+
+trait Report {
+    fn new(worker_result: &'static WorkerResult) -> Self
+    where
+        Self: Sized;
+
+    /// Method to return report-related file extenstion (without leading dot, for e.g.: `txt`)
+    fn get_extenstion(&self) -> &str;
+
+    /// Set base filename for the report – this method must resolve full unique file name with
+    /// extenstion, for example: `report-20240501-1.txt`
+    fn set_filename(&mut self, base_name: String) -> &String;
+
+    /// Return resolved unique full file name set by `Report::set_filename()`
+    fn get_filename(&mut self) -> &String;
+
+    /// This method to write report, it must return success with number of rows/records written
+    /// or error if any occured
+    fn write_report(&self) -> Result<u128, Error>;
+
+    /// Helper method: resolves unique full file name with extenstion for current report
+    fn create_file(&self, base_name: String) -> String {
+        let mut base: String = format!("{}.{}", base_name, self.get_extenstion());
+
+        let mut counter = 0;
+        while Path::new(base.as_str()).exists() {
+            counter += 1;
+            base = format!("{}-{}.{}", base_name, counter, self.get_extenstion());
+        }
+
+        base
+    }
+
+    fn open_file(&self, filename: &str) -> Result<File, std::io::Error> {
+        let f = File::create(filename);
+
+        match f {
+            Ok(file) => Ok(file),
+            Err(error) => {
+                log::warn!(
+                    "Error opening file '{filename}' for writing report: {}",
+                    error
+                );
+
+                Err(error)
+            }
+        }
+    }
 }
 
-impl<'a> Report<'a> {
-    const REPORT_WIDTH: usize = 61;
+fn format_current_time() -> String {
+    Local::now().format("%Y%m%d-%H%M%S").to_string()
+}
 
-    pub fn new(result: &WorkerResult) -> Report<'_> {
-        Report {
-            worker_result: result,
-        }
-    }
+fn get_base_filename() -> String {
+    format!("oxiflow_report_{}", format_current_time())
+}
 
-    fn get_filler(&self, title: &str) -> String {
-        let filler_size = (Self::REPORT_WIDTH - title.len() - 2) / 2;
+pub fn create_report(format: &ReportFormats, worker_result: &'static WorkerResult) {
+    let mut report: Box<dyn Report> = match &format {
+        ReportFormats::Txt => Box::new(ReportTxt::new(worker_result)),
+        ReportFormats::Csv => todo!(),
+    };
 
-        "=".repeat(filler_size)
-    }
+    let base_name = get_base_filename();
+    report.set_filename(base_name);
 
-    fn print_into(&self, title: &str) {
-        let filler_part = self.get_filler(title);
-
-        println!("{} {} {}", filler_part, title, filler_part);
-    }
-
-    fn print_end(&self) {
-        println!("{}", "=".repeat(Self::REPORT_WIDTH));
-    }
-
-    fn print_summary(&self) {
-        println!("Successes: {}", self.worker_result.totals.responses.count);
-        println!("Failures: {}", self.worker_result.totals.errors);
-        println!("Skipped: {}", self.worker_result.totals.skipped);
-        println!(
-            "Average response time: {} ms",
-            self.worker_result.totals.responses.average_ms
-        );
-        println!();
-    }
-
-    fn print_per_code_result(&self) {
-        self.print_into("Stats by code");
-
-        println!("Code\t\tResponses\tAverage time (ms)");
-
-        for i in 1u8..6u8 {
-            let code_data = self.worker_result.totals.by_code.get(i as usize).unwrap();
-            println!(
-                "HTTP {}xx\t{}\t\t{}",
-                i, code_data.count, code_data.average_ms
-            );
-        }
-    }
-
-    pub fn print_report(&self, per_request: bool) {
-        self.print_into("Results");
-        self.print_summary();
-        self.print_per_code_result();
-
-        if per_request {
-            println!();
-            self.print_per_request();
-        }
-        self.print_end();
-    }
-
-    pub fn print_per_request(&self) {
-        self.print_into("Per-request results");
-
-        for record in self.worker_result.requests.iter() {
-            let (code, time) = match record.success {
-                true => {
-                    let code = record.http_code.unwrap();
-
-                    (
-                        reqwest::StatusCode::from_u16(code).unwrap().to_string(),
-                        record.time_ms.unwrap_or_default().to_string(),
-                    )
-                }
-                false => ("Failed".to_string(), "0".to_string()),
-            };
-            println!(
-                "{: >7} ms {: >7} {} - {}",
-                time, record.method, record.url, code
-            );
-        }
+    match report.write_report() {
+        Ok(report_lines) => println!(
+            "Report file saved '{}', {} line(s) was written",
+            report.get_filename(),
+            report_lines
+        ),
+        Err(_) => println!("Unable to save report in file '{}'", report.get_filename()),
     }
 }

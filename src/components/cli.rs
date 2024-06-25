@@ -3,7 +3,7 @@
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 use std::{ffi::OsString, vec::IntoIter};
 
-use clap::{ArgAction, Parser};
+use clap::{ArgAction, Parser, ValueEnum};
 use env_logger::Builder as log_builder;
 
 use crate::components::http;
@@ -70,6 +70,22 @@ pub struct Args {
     /// Produce sample URLs file
     #[arg(long("help-file"))]
     pub help_file: bool,
+
+    /// Save report data, can be used to format report later
+    #[arg(long("dump-report"))]
+    pub dump_report: bool,
+
+    /// Generate report
+    #[arg(long("report"))]
+    #[clap(value_enum)]
+    pub report: Option<ReportFormats>,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+#[clap(rename_all="kebab-case")]
+pub enum ReportFormats {
+    Csv,
+    Txt,
 }
 
 pub struct Cli {

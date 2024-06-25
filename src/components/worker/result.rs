@@ -43,6 +43,7 @@ impl WorkerResult {
         self.requests.push(Single::failure(
             response.url.clone(),
             response.method.clone(),
+            response.timeout
         ));
     }
 }

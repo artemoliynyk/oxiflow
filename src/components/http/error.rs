@@ -10,11 +10,11 @@ pub struct HttpError {
     pub method: String,
 
     // error message
-    error: String,
-
+    pub error: String,
+    
     /// if error happened due to the timeout – this field will hold the time (ms)
-    timeout: Option<u128>,
-
+    pub timeout: Option<u128>,
+    
     /// request start time
     pub time: Instant,
 }
